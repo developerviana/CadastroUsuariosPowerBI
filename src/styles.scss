@@ -1,1 +1,64 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+	--brand-blue-050: #e9f5ff;
+	--brand-blue-100: #cce8ff;
+	--brand-blue-400: #2e8fc7;
+	--brand-blue-500: #1778b6;
+	--brand-blue-600: #0b5f95;
+	--brand-blue-700: #0a4a75;
+	--brand-blue-900: #08314d;
+
+	/* Overrides de tokens PO-UI para remover roxo/rosa do tema default. */
+	--color-brand-01-lightest: #e9f5ff;
+	--color-brand-01-lighter: #cce8ff;
+	--color-brand-01-light: #9dd0ef;
+	--color-brand-01-base: var(--brand-blue-500);
+	--color-brand-01-dark: var(--brand-blue-600);
+	--color-brand-01-darker: var(--brand-blue-700);
+	--color-brand-01-darkest: var(--brand-blue-900);
+
+	--color-brand-02-base: var(--brand-blue-500);
+
+	--color-action-default: var(--brand-blue-500);
+	--color-action-hover: var(--brand-blue-600);
+	--color-action-pressed: var(--brand-blue-700);
+	--color-action-focus: var(--brand-blue-900);
+
+	--color-primary: var(--brand-blue-500);
+	--color-primary-dark-20: var(--brand-blue-600);
+	--color-primary-dark-40: var(--brand-blue-700);
+	--color-primary-alpha-50: rgba(23, 120, 182, 0.5);
+}
+
+html,
+body {
+	margin: 0;
+	min-height: 100%;
+}
+
+body {
+	background:
+		radial-gradient(circle at 15% 20%, rgba(46, 143, 199, 0.2), transparent 35%),
+		radial-gradient(circle at 90% 80%, rgba(11, 95, 149, 0.16), transparent 30%),
+		linear-gradient(180deg, #f2f9ff 0%, #ffffff 60%);
+	scrollbar-color: var(--brand-blue-500) var(--brand-blue-050);
+	scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+	background: var(--brand-blue-050);
+}
+
+*::-webkit-scrollbar-thumb {
+	background: linear-gradient(180deg, var(--brand-blue-500), var(--brand-blue-600));
+	border: 2px solid var(--brand-blue-050);
+	border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(180deg, var(--brand-blue-600), var(--brand-blue-700));
+}
