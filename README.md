@@ -123,100 +123,16 @@ npm run test
 
 ---
 
-## Endpoints Necessários no Backend
+## Integração com Backend e Protheus
 
-Sugestão de contrato REST para suportar o CRUD:
+Para informações detalhadas sobre integração com o Protheus, sincronização com Power-BI RLS, configuração de endpoints backend e estratégia de deploy, consulte o documento **[IMPLEMENTACAO-PROTHEUS.md](IMPLEMENTACAO-PROTHEUS.md)**.
 
-### 1. Listar usuários habilitados
-
-- Método: `GET`
-- Rota: `/api/power-bi-users`
-- Query params sugeridos: `page`, `pageSize`, `search`, `costCenter`, `enabled`
-
-Resposta esperada:
-
-```json
-{
-	"items": [
-		{
-			"id": 1,
-			"userCode": "USR-001",
-			"name": "ANA EXEMPLO",
-			"email": "ana.exemplo@organizacao-ficticia.org",
-			"costCenterCode": "CC-1001",
-			"costCenterName": "CENTRO DE CUSTO A",
-			"enabled": true,
-			"createdAt": "2026-04-02T12:00:00Z",
-			"updatedAt": "2026-04-02T12:00:00Z"
-		}
-	],
-	"page": 1,
-	"pageSize": 10,
-	"total": 1,
-	"hasNext": false
-}
-```
-
-### 2. Listar usuários com filtro em lote
-
-- Método: `GET`
-- Rota: `/api/power-bi-users`
-- Uso: retornar a mesma estrutura da listagem principal, já pronta para filtros e seleção múltipla no frontend
-
-### 3. Buscar usuário por id
-
-- Método: `GET`
-- Rota: `/api/power-bi-users/{id}`
-
-### 4. Criar usuário habilitado
-
-- Método: `POST`
-- Rota: `/api/power-bi-users`
-
-Payload sugerido:
-
-```json
-{
-	"userCode": "USR-002",
-	"name": "BRUNO DEMO",
-	"email": "bruno.demo@organizacao-ficticia.org",
-	"costCenterCode": "CC-2002",
-	"costCenterName": "CENTRO DE CUSTO B",
-	  "enabled": true
-}
-```
-
-	### 5. Atualizar usuário habilitado
-
-- Método: `PUT`
-- Rota: `/api/power-bi-users/{id}`
-
-	### 6. Remover usuário habilitado
-
-- Método: `DELETE`
-- Rota: `/api/power-bi-users/{id}`
-
-	### 7. Opcional: consulta de centros de custo
-
-- Método: `GET`
-- Rota: `/api/cost-centers`
-- Uso: popular dropdown/autocomplete de centro de custo
-
-	### 8. Opcional: ações em lote
-
-	- Método: `PATCH` ou `POST`
-	- Rota: `/api/power-bi-users/batch`
-	- Uso: ativar, inativar ou excluir vários usuários de uma vez
-
-	Payload sugerido:
-
-	```json
-	{
-		"ids": [1, 2, 3],
-		"enabled": false,
-		"action": "disable"
-	}
-	```
+Este documento inclui:
+- Estrutura de endpoints REST esperados
+- Integração com tabelas do Protheus
+- Sincronização com Row Level Security (RLS)
+- Guia de compilação e deploy
+- Checklist de implementação
 
 ---
 
