@@ -54,10 +54,39 @@
     </div>
   </section>
 
+  <section class="filters-panel po-mb-3">
+    <form class="po-row filters-form" [formGroup]="filtersForm">
+      <po-input
+        class="po-md-6"
+        p-label="Buscar"
+        p-placeholder="Usuario, nome, e-mail ou centro de custo"
+        formControlName="term"
+      >
+      </po-input>
+
+      <po-switch
+        class="po-md-3 filters-switch"
+        p-label="Somente ativos"
+        formControlName="onlyEnabled"
+      >
+      </po-switch>
+
+      <div class="po-md-3 filters-actions">
+        <po-button
+          p-label="Limpar filtros"
+          p-kind="tertiary"
+          p-icon="po-icon-filter"
+          (p-click)="clearFilters()"
+        >
+        </po-button>
+      </div>
+    </form>
+  </section>
+
   <po-table
     #userTable
     [p-columns]="columns"
-    [p-items]="users"
+    [p-items]="filteredUsers"
     [p-actions]="tableActions"
     [p-loading]="isLoading"
     [p-selectable]="true"

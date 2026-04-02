@@ -83,6 +83,11 @@ export class UserAccessComponent implements OnInit {
     enabled: [true]
   });
 
+  public readonly filtersForm = this.formBuilder.nonNullable.group({
+    term: [''],
+    onlyEnabled: [false]
+  });
+
   public ngOnInit(): void {
     this.loadUsers();
   }
@@ -93,6 +98,24 @@ export class UserAccessComponent implements OnInit {
 
   public get enabledCount(): number {
     return this.users.filter(user => user.enabled).length;
+  }
+
+  public get filteredUsers(): PowerBiUser[] {
+    const term = this.filtersForm.controls.term.value.trim().toLowerCase();
+    const onlyEnabled = this.filtersForm.controls.onlyEnabled.value;
+
+    return this.users.filter(user => {
+      const matchesTerm =
+        term.length === 0 ||
+        [user.userCode, user.name, user.email, user.costCenterCode, user.costCenterName]
+          .join(' ')
+          .toLowerCase()
+          .includes(term);
+
+      const matchesEnabled = !onlyEnabled || user.enabled;
+
+      return matchesTerm && matchesEnabled;
+    });
   }
 
   public get selectedUsersCount(): number {
@@ -220,6 +243,13 @@ export class UserAccessComponent implements OnInit {
         this.notification.success('Usuarios excluidos com sucesso.');
         this.loadUsers();
       }
+    });
+  }
+
+  public clearFilters(): void {
+    this.filtersForm.reset({
+      term: '',
+      onlyEnabled: false
     });
   }
 
