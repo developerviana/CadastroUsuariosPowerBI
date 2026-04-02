@@ -134,6 +134,140 @@ body::before {
 	justify-content: flex-end;
 }
 
+.dashboard-resume {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.75rem;
+}
+
+.resume-item {
+	background: #f8fbfd;
+	border: 1px solid rgba(176, 194, 208, 0.34);
+	border-radius: 12px;
+	box-shadow: 0 10px 24px rgba(31, 47, 61, 0.08);
+	cursor: pointer;
+	padding: 1rem 1.05rem;
+	transition: background-color 240ms ease, transform 240ms ease, box-shadow 240ms ease;
+}
+
+.resume-item:hover {
+	background: #eef4f8;
+	box-shadow: 0 14px 26px rgba(31, 47, 61, 0.12);
+	transform: translateY(-2px);
+}
+
+.resume-label {
+	color: #6e8294;
+	display: block;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 24px;
+	text-transform: uppercase;
+}
+
+.resume-value {
+	color: #12324e;
+	font-family: var(--app-font-family);
+	font-weight: 700;
+	font-size: 16px;
+	line-height: 24px;
+}
+
+.resume-item:hover .resume-label,
+.resume-item:hover .resume-value {
+	color: #1A4E79;
+}
+
+.resume-item-action {
+	align-items: center;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.empty-state {
+	align-items: center;
+	background: rgba(255, 255, 255, 0.78);
+	border: 1px solid rgba(176, 194, 208, 0.34);
+	border-radius: 16px;
+	box-shadow: 0 12px 28px rgba(31, 47, 61, 0.06);
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 2rem 1.25rem;
+	text-align: center;
+}
+
+.empty-state strong {
+	color: #12324e;
+	font-size: 16px;
+	line-height: 24px;
+}
+
+.empty-state p {
+	color: #6e8294;
+	font-size: 14px;
+	line-height: 24px;
+	margin: 0;
+	max-width: 34rem;
+}
+
+.empty-state-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	justify-content: center;
+}
+
+.empty-state-actions po-button {
+	min-width: 220px;
+}
+
+.po-table {
+	border: 1px solid rgba(176, 194, 208, 0.24);
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 14px 30px rgba(31, 47, 61, 0.06);
+}
+
+.po-table-header {
+	background: linear-gradient(180deg, #ffffff, #f6f9fb);
+}
+
+.po-table .color-11,
+.po-table .po-label-color-11,
+.po-table [class*='color-11'] {
+	background-color: #1A4E79 !important;
+	border-color: #1A4E79 !important;
+	color: #ffffff !important;
+}
+
+.po-table .color-08,
+.po-table .po-label-color-08,
+.po-table [class*='color-08'] {
+	background-color: #e3e9ef !important;
+	border-color: #b8c7d4 !important;
+	color: #2f485d !important;
+}
+
+.po-modal {
+	border-radius: 14px;
+}
+
+@media (max-width: 991px) {
+	.dashboard-resume {
+		grid-template-columns: 1fr;
+	}
+
+	.resume-item-action {
+		justify-content: flex-start;
+	}
+
+	.empty-state-actions {
+		width: 100%;
+	}
+}
+
 .detail-card {
 	background: rgba(255, 255, 255, 0.82);
 	border: 1px solid rgba(176, 194, 208, 0.34);

@@ -83,48 +83,82 @@
     </form>
   </section>
 
-  <po-table
-    #userTable
-    [p-columns]="columns"
-    [p-items]="filteredUsers"
-    [p-actions]="tableActions"
-    [p-loading]="isLoading"
-    [p-selectable]="true"
-    [p-selectable-entire-line]="true"
-    [p-striped]="true"
-    [p-hide-table-search]="false"
-    [p-hide-columns-manager]="true"
-    [p-sort]="true"
-    p-container="shadow"
-  >
-    <ng-template p-table-row-template let-row let-i="rowIndex">
-      <div class="detail-card">
-        <div class="detail-card-header">
-          <strong>{{ row.userCode }}</strong>
-          <span>{{ row.name }}</span>
+  <ng-container *ngIf="hasFilteredUsers; else emptyState">
+    <po-table
+      #userTable
+      [p-columns]="columns"
+      [p-items]="filteredUsers"
+      [p-actions]="tableActions"
+      [p-loading]="isLoading"
+      [p-selectable]="true"
+      [p-selectable-entire-line]="true"
+      [p-striped]="true"
+      [p-hide-table-search]="false"
+      [p-hide-columns-manager]="true"
+      [p-sort]="true"
+      p-container="shadow"
+    >
+      <ng-template p-table-row-template let-row let-i="rowIndex">
+        <div class="detail-card">
+          <div class="detail-card-header">
+            <strong>{{ row.userCode }}</strong>
+            <span>{{ row.name }}</span>
+          </div>
+
+          <div class="detail-card-grid">
+            <div>
+              <span>E-mail</span>
+              <strong>{{ row.email }}</strong>
+            </div>
+
+            <div>
+              <span>Centro de custo</span>
+              <strong>{{ row.costCenterCode }} - {{ row.costCenterName }}</strong>
+            </div>
+
+            <div>
+              <span>Status</span>
+              <strong [class.detail-status-enabled]="row.enabled" [class.detail-status-disabled]="!row.enabled">
+                {{ row.enabled ? 'Ativo' : 'Inativo' }}
+              </strong>
+            </div>
+          </div>
         </div>
+      </ng-template>
+    </po-table>
+  </ng-container>
 
-        <div class="detail-card-grid">
-          <div>
-            <span>E-mail</span>
-            <strong>{{ row.email }}</strong>
-          </div>
+  <ng-template #emptyState>
+    <section class="empty-state">
+      <strong>
+        {{ hasNoUsers ? 'Nenhum usuário cadastrado' : 'Nenhum resultado encontrado' }}
+      </strong>
 
-          <div>
-            <span>Centro de custo</span>
-            <strong>{{ row.costCenterCode }} - {{ row.costCenterName }}</strong>
-          </div>
+      <p>
+        {{ hasNoUsers ? 'Cadastre o primeiro usuário para liberar o acesso ao Power BI.' : 'Ajuste os filtros para localizar usuários cadastrados.' }}
+      </p>
 
-          <div>
-            <span>Status</span>
-            <strong [class.detail-status-enabled]="row.enabled" [class.detail-status-disabled]="!row.enabled">
-              {{ row.enabled ? 'Ativo' : 'Inativo' }}
-            </strong>
-          </div>
-        </div>
+      <div class="empty-state-actions">
+        <po-button
+          *ngIf="hasNoUsers"
+          p-label="Cadastrar primeiro usuário"
+          p-kind="primary"
+          p-icon="po-icon-plus"
+          (p-click)="showCreateFromEmptyState()"
+        >
+        </po-button>
+
+        <po-button
+          *ngIf="isFilteredEmpty"
+          p-label="Limpar filtros"
+          p-kind="tertiary"
+          p-icon="po-icon-filter"
+          (p-click)="clearFilters()"
+        >
+        </po-button>
       </div>
-    </ng-template>
-  </po-table>
+    </section>
+  </ng-template>
 
   <po-modal
     #userModal

@@ -126,6 +126,22 @@ export class UserAccessComponent implements OnInit {
     return this.selectedUsersCount > 0;
   }
 
+  public get hasUsers(): boolean {
+    return this.users.length > 0;
+  }
+
+  public get hasFilteredUsers(): boolean {
+    return this.filteredUsers.length > 0;
+  }
+
+  public get hasNoUsers(): boolean {
+    return this.users.length === 0;
+  }
+
+  public get isFilteredEmpty(): boolean {
+    return this.hasUsers && !this.hasFilteredUsers;
+  }
+
   public get modalTitle(): string {
     return this.editingUserId ? 'Editar usuario' : 'Novo usuario';
   }
@@ -251,6 +267,11 @@ export class UserAccessComponent implements OnInit {
       term: '',
       onlyEnabled: false
     });
+  }
+
+  public showCreateFromEmptyState(): void {
+    this.clearFilters();
+    this.openCreateModal();
   }
 
   private loadUsers(): void {
