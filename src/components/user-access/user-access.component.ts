@@ -86,7 +86,7 @@ export class UserAccessComponent implements OnInit {
   }
 
   public get pageSubtitle(): string {
-    return 'Gestao de usuarios habilitados para visualizacao do Power BI';
+    return 'Gestão de usuarios habilitados para visualização do Power BI';
   }
 
   public get enabledCount(): number {

@@ -1,4 +1,5 @@
 :root {
+	--app-font-family: 'NunitoSans', 'Segoe UI', Arial, sans-serif;
 	--brand-blue-050: #f2f6fa;
 	--brand-blue-100: #dbe4ec;
 	--brand-blue-400: #6b8aa3;
@@ -37,6 +38,7 @@ body {
 
 body {
 	position: relative;
+	font-family: var(--app-font-family);
 	background: #edf1f4;
 	scrollbar-color: var(--brand-blue-500) #e5ebf0;
 	scrollbar-width: thin;

@@ -12,6 +12,7 @@
 :host ::ng-deep .po-menu .po-menu-item-text,
 :host ::ng-deep .po-menu .po-menu-item-icon {
 	color: var(--brand-blue-900);
+	font-family: var(--app-font-family);
 }
 
 :host ::ng-deep .po-menu .po-menu-item:hover {
@@ -28,4 +29,11 @@
 
 .menu-footer po-button {
 	width: 100%;
+}
+
+:host ::ng-deep .po-menu .po-menu-item-text {
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 24px;
+	letter-spacing: 0;
 }

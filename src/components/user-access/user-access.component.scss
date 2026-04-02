@@ -28,14 +28,19 @@
 .resume-label {
   color: #6e8294;
   display: block;
-  font-size: 0.8rem;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 24px;
   text-transform: uppercase;
 }
 
 .resume-value {
   color: #12324e;
-  font-size: 1.4rem;
-  line-height: 1.2;
+  font-family: var(--app-font-family);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .resume-item:hover .resume-label,
@@ -51,11 +56,18 @@
 
 :host ::ng-deep .po-page-header-title {
   color: var(--brand-blue-700);
-  font-weight: 700;
+  font-family: var(--app-font-family);
+  font-size: 34px;
+  font-weight: 200;
+  line-height: 48px;
 }
 
 :host ::ng-deep .po-page-header-subtitle {
   color: #6e8294;
+  font-family: var(--app-font-family);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
 }
 
 :host ::ng-deep po-button[p-kind='primary'] button,
