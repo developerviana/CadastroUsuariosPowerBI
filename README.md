@@ -35,8 +35,12 @@ Este projeto implementa uma tela de CRUD para administração de usuários habil
 
 ### Funcionalidades
 
-- Listagem paginada de usuários habilitados
-- Pesquisa por nome, e-mail e centro de custo
+- Listagem dinâmica de usuários com colunas geradas a partir do JSON retornado
+- Pesquisa rápida por usuário, nome, e-mail e centro de custo
+- Filtro para exibir somente usuários ativos
+- Seleção múltipla com ações em lote para ativar, inativar e excluir
+- Detalhe por linha para visualizar e-mail, centro de custo e status
+- Estado vazio com mensagem contextual e ação de cadastro inicial
 - Cadastro de novo usuário
 - Edição de dados existentes
 - Exclusão com confirmação
@@ -74,6 +78,12 @@ src/
 - Modelos fortemente tipados
 - Nomes descritivos e padronizados
 - Código preparado para testes e evolução incremental
+
+## Tema e Tipografia
+
+O projeto usa o padrão de customização recomendado pela PO-UI com tokens CSS globais. O tema é carregado com os arquivos de variáveis e core do PO-UI, permitindo sobrescrever cores, tipografia e estados visuais sem quebrar a base do framework.
+
+As personalizações principais estão centralizadas em `src/styles.scss` e seguem a escala de tipografia da PO-UI para títulos, textos e menus.
 
 ---
 
@@ -121,7 +131,7 @@ Sugestão de contrato REST para suportar o CRUD:
 
 - Método: `GET`
 - Rota: `/api/power-bi-users`
-- Query params: `page`, `pageSize`, `search`, `costCenter`
+- Query params sugeridos: `page`, `pageSize`, `search`, `costCenter`, `enabled`
 
 Resposta esperada:
 
@@ -135,7 +145,7 @@ Resposta esperada:
 			"email": "ana.exemplo@organizacao-ficticia.org",
 			"costCenterCode": "CC-1001",
 			"costCenterName": "CENTRO DE CUSTO A",
-			"active": true,
+			"enabled": true,
 			"createdAt": "2026-04-02T12:00:00Z",
 			"updatedAt": "2026-04-02T12:00:00Z"
 		}
@@ -147,12 +157,18 @@ Resposta esperada:
 }
 ```
 
-### 2. Buscar usuário por id
+### 2. Listar usuários com filtro em lote
+
+- Método: `GET`
+- Rota: `/api/power-bi-users`
+- Uso: retornar a mesma estrutura da listagem principal, já pronta para filtros e seleção múltipla no frontend
+
+### 3. Buscar usuário por id
 
 - Método: `GET`
 - Rota: `/api/power-bi-users/{id}`
 
-### 3. Criar usuário habilitado
+### 4. Criar usuário habilitado
 
 - Método: `POST`
 - Rota: `/api/power-bi-users`
@@ -166,25 +182,41 @@ Payload sugerido:
 	"email": "bruno.demo@organizacao-ficticia.org",
 	"costCenterCode": "CC-2002",
 	"costCenterName": "CENTRO DE CUSTO B",
-	"active": true
+	  "enabled": true
 }
 ```
 
-### 4. Atualizar usuário habilitado
+	### 5. Atualizar usuário habilitado
 
 - Método: `PUT`
 - Rota: `/api/power-bi-users/{id}`
 
-### 5. Remover usuário habilitado
+	### 6. Remover usuário habilitado
 
 - Método: `DELETE`
 - Rota: `/api/power-bi-users/{id}`
 
-### 6. Opcional: consulta de centros de custo
+	### 7. Opcional: consulta de centros de custo
 
 - Método: `GET`
 - Rota: `/api/cost-centers`
 - Uso: popular dropdown/autocomplete de centro de custo
+
+	### 8. Opcional: ações em lote
+
+	- Método: `PATCH` ou `POST`
+	- Rota: `/api/power-bi-users/batch`
+	- Uso: ativar, inativar ou excluir vários usuários de uma vez
+
+	Payload sugerido:
+
+	```json
+	{
+		"ids": [1, 2, 3],
+		"enabled": false,
+		"action": "disable"
+	}
+	```
 
 ---
 
