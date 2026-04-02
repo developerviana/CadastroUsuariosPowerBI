@@ -15,7 +15,6 @@ Aplicação web para cadastro, consulta, alteração e remoção de usuários co
 [Tecnologias](#-tecnologias) •
 [Arquitetura](#-arquitetura) •
 [Como Executar](#-como-executar) •
-[Endpoints Backend](#-endpoints-necessários-no-backend) •
 [Boas Práticas](#-boas-práticas-adotadas)
 
 </div>
@@ -120,19 +119,6 @@ npm run build
 ```bash
 npm run test
 ```
-
----
-
-## Integração com Backend e Protheus
-
-Para informações detalhadas sobre integração com o Protheus, sincronização com Power-BI RLS, configuração de endpoints backend e estratégia de deploy, consulte o documento **[IMPLEMENTACAO-PROTHEUS.md](IMPLEMENTACAO-PROTHEUS.md)**.
-
-Este documento inclui:
-- Estrutura de endpoints REST esperados
-- Integração com tabelas do Protheus
-- Sincronização com Row Level Security (RLS)
-- Guia de compilação e deploy
-- Checklist de implementação
 
 ---
 
