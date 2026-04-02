@@ -1,0 +1,96 @@
+<po-page-default p-title="Cadastro de Usuarios Power BI" [p-subtitle]="pageSubtitle">
+  <section class="dashboard-resume po-mb-3">
+    <div class="resume-item">
+      <span class="resume-label">Total de usuarios</span>
+      <strong class="resume-value">{{ users.length }}</strong>
+    </div>
+
+    <div class="resume-item">
+      <span class="resume-label">Usuarios ativos</span>
+      <strong class="resume-value">{{ enabledCount }}</strong>
+    </div>
+
+    <div class="resume-item resume-item-action">
+      <po-button
+        p-label="Incluir"
+        p-kind="primary"
+        p-icon="po-icon-plus"
+        (p-click)="openCreateModal()"
+      >
+      </po-button>
+    </div>
+  </section>
+
+  <po-table
+    [p-columns]="columns"
+    [p-items]="tableItems"
+    [p-actions]="tableActions"
+    [p-loading]="isLoading"
+    [p-striped]="true"
+    [p-hide-table-search]="false"
+    [p-hide-columns-manager]="true"
+    [p-sort]="true"
+    p-container="shadow"
+  >
+  </po-table>
+
+  <po-modal
+    #userModal
+    [p-title]="modalTitle"
+    [p-primary-action]="primaryModalAction"
+    [p-secondary-action]="secondaryModalAction"
+  >
+    <form class="po-row" [formGroup]="userForm">
+      <po-input
+        class="po-md-3"
+        p-label="Usuario"
+        formControlName="userCode"
+        p-required="true"
+        [p-maxlength]="20"
+      >
+      </po-input>
+
+      <po-input
+        class="po-md-9"
+        p-label="Nome"
+        formControlName="name"
+        p-required="true"
+        [p-maxlength]="80"
+      >
+      </po-input>
+
+      <po-email
+        class="po-md-6"
+        p-label="E-mail"
+        formControlName="email"
+        p-required="true"
+      >
+      </po-email>
+
+      <po-input
+        class="po-md-3"
+        p-label="C.Custo"
+        formControlName="costCenterCode"
+        p-required="true"
+        [p-maxlength]="20"
+      >
+      </po-input>
+
+      <po-input
+        class="po-md-9"
+        p-label="Nome C.Custo"
+        formControlName="costCenterName"
+        p-required="true"
+        [p-maxlength]="120"
+      >
+      </po-input>
+
+      <po-switch
+        class="po-md-4"
+        p-label="Usuario ativo"
+        formControlName="enabled"
+      >
+      </po-switch>
+    </form>
+  </po-modal>
+</po-page-default>

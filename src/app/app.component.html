@@ -1,18 +1,22 @@
-<div class="po-wrapper">
+<div class="app-shell">
+  <po-menu [p-collapsed]="false" [p-menus]="menuItems">
+    <div *p-menu-header-template class="menu-header">
+      Cadastro de Usuarios
+      <small>Power BI</small>
+    </div>
 
-  <po-toolbar p-title="Crud PO"></po-toolbar>
-
-  <po-menu [p-collapsed]="true" [p-menus]="menus" [p-menus]="menus">
-    <div *p-menu-header-template class="po-p-2 po-font-title sample-menu-header-text-color">
-      <p>Bem-vindo,</p>
-      <p>
-        <b> Usuário </b>
-      </p>
+    <div *p-menu-footer-template class="menu-footer">
+      <po-button
+        p-label="Sair da rotina"
+        p-kind="tertiary"
+        p-icon="po-icon-exit"
+        (p-click)="exitRoutine()"
+      >
+      </po-button>
     </div>
   </po-menu>
 
-  <po-page-default [p-title]="menuItemSelected">
-    <po-divider></po-divider>
+  <main class="app-content">
     <router-outlet></router-outlet>
-  </po-page-default>
+  </main>
 </div>
