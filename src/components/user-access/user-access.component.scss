@@ -33,14 +33,14 @@
 }
 
 .resume-value {
-  color: #dfeaf2;
+  color: #12324e;
   font-size: 1.4rem;
   line-height: 1.2;
 }
 
 .resume-item:hover .resume-label,
 .resume-item:hover .resume-value {
-  color: #eef5fb;
+  color: #1A4E79;
 }
 
 .resume-item-action {
@@ -91,6 +91,14 @@
   background-color: #1A4E79 !important;
   border-color: #1A4E79 !important;
   color: #ffffff !important;
+}
+
+:host ::ng-deep .po-table .color-08,
+:host ::ng-deep .po-table .po-label-color-08,
+:host ::ng-deep .po-table [class*='color-08'] {
+  background-color: #e3e9ef !important;
+  border-color: #b8c7d4 !important;
+  color: #2f485d !important;
 }
 
 :host ::ng-deep .po-modal {
