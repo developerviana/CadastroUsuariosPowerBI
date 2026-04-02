@@ -11,6 +11,7 @@ import {
   PoModalModule,
   PoNotificationService,
   PoPageModule,
+  PoTableComponent,
   PoTableAction,
   PoTableColumn,
   PoTableModule
@@ -37,6 +38,7 @@ import { PowerBiUserService } from '../../app/services/power-bi-user.service';
 })
 export class UserAccessComponent implements OnInit {
   @ViewChild('userModal', { static: true }) private userModal!: PoModalComponent;
+  @ViewChild('userTable') private userTable?: PoTableComponent;
 
   private readonly service = inject(PowerBiUserService);
   private readonly notification = inject(PoNotificationService);
@@ -91,6 +93,14 @@ export class UserAccessComponent implements OnInit {
 
   public get enabledCount(): number {
     return this.users.filter(user => user.enabled).length;
+  }
+
+  public get selectedUsersCount(): number {
+    return this.getSelectedUsers().length;
+  }
+
+  public get hasSelectedUsers(): boolean {
+    return this.selectedUsersCount > 0;
   }
 
   public get modalTitle(): string {
@@ -179,6 +189,40 @@ export class UserAccessComponent implements OnInit {
     });
   }
 
+  public enableSelectedUsers(): void {
+    this.updateSelectedUsers(true, 'ativados');
+  }
+
+  public disableSelectedUsers(): void {
+    this.updateSelectedUsers(false, 'inativados');
+  }
+
+  public confirmDeleteSelectedUsers(): void {
+    const selectedUsers = this.getSelectedUsers();
+
+    if (selectedUsers.length === 0) {
+      return;
+    }
+
+    const message =
+      selectedUsers.length === 1
+        ? `Deseja realmente excluir o usuario ${selectedUsers[0].name}?`
+        : `Deseja realmente excluir os ${selectedUsers.length} usuarios selecionados?`;
+
+    this.dialogService.confirm({
+      title: 'Excluir usuarios selecionados',
+      message,
+      confirm: () => {
+        selectedUsers.forEach(user => {
+          this.service.delete(user.id).subscribe();
+        });
+
+        this.notification.success('Usuarios excluidos com sucesso.');
+        this.loadUsers();
+      }
+    });
+  }
+
   private loadUsers(): void {
     this.isLoading = true;
     this.service.getAll().subscribe({
@@ -194,6 +238,28 @@ export class UserAccessComponent implements OnInit {
     });
   }
 
+  private updateSelectedUsers(enabled: boolean, statusLabel: 'ativados' | 'inativados'): void {
+    const selectedUsers = this.getSelectedUsers();
+
+    if (selectedUsers.length === 0) {
+      return;
+    }
+
+    selectedUsers.forEach(user => {
+      this.service.update(user.id, {
+        userCode: user.userCode,
+        name: user.name,
+        email: user.email,
+        costCenterCode: user.costCenterCode,
+        costCenterName: user.costCenterName,
+        enabled
+      }).subscribe();
+    });
+
+    this.notification.success(`Usuarios ${statusLabel} com sucesso.`);
+    this.loadUsers();
+  }
+
   private handleEditAction(row: unknown): void {
     if (this.isUserRow(row)) {
       this.openEditModal(row);
@@ -204,6 +270,12 @@ export class UserAccessComponent implements OnInit {
     if (this.isUserRow(row)) {
       this.confirmDelete(row);
     }
+  }
+
+  private getSelectedUsers(): PowerBiUser[] {
+    const selectedRows = this.userTable?.getSelectedRows() ?? [];
+
+    return selectedRows.filter((row): row is PowerBiUser => this.isUserRow(row));
   }
 
   private isUserRow(row: unknown): row is PowerBiUser {

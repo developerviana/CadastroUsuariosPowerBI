@@ -21,11 +21,47 @@
     </div>
   </section>
 
+  <section *ngIf="hasSelectedUsers" class="bulk-actions po-mb-3">
+    <div class="bulk-actions-summary">
+      <strong>{{ selectedUsersCount }}</strong>
+      <span>usuarios selecionados</span>
+    </div>
+
+    <div class="bulk-actions-buttons">
+      <po-button
+        p-label="Ativar selecionados"
+        p-kind="primary"
+        p-icon="po-icon-check"
+        (p-click)="enableSelectedUsers()"
+      >
+      </po-button>
+
+      <po-button
+        p-label="Inativar selecionados"
+        p-kind="tertiary"
+        p-icon="po-icon-ban"
+        (p-click)="disableSelectedUsers()"
+      >
+      </po-button>
+
+      <po-button
+        p-label="Excluir selecionados"
+        p-kind="tertiary"
+        p-icon="po-icon-delete"
+        (p-click)="confirmDeleteSelectedUsers()"
+      >
+      </po-button>
+    </div>
+  </section>
+
   <po-table
+    #userTable
     [p-columns]="columns"
     [p-items]="users"
     [p-actions]="tableActions"
     [p-loading]="isLoading"
+    [p-selectable]="true"
+    [p-selectable-entire-line]="true"
     [p-striped]="true"
     [p-hide-table-search]="false"
     [p-hide-columns-manager]="true"
