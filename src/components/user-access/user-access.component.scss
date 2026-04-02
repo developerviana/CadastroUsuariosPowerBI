@@ -54,66 +54,8 @@
   justify-content: flex-end;
 }
 
-.bulk-actions {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(176, 194, 208, 0.36);
-  border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(31, 47, 61, 0.05);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: space-between;
-  padding: 1rem 1.1rem;
-}
-
-.bulk-actions-summary {
-  align-items: baseline;
-  color: #12324e;
-  display: flex;
-  gap: 0.5rem;
-}
-
-.bulk-actions-summary strong {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-.bulk-actions-summary span {
-  color: #6e8294;
-  font-size: 14px;
-  line-height: 24px;
-}
-
-.bulk-actions-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.filters-panel {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(176, 194, 208, 0.34);
-  border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(31, 47, 61, 0.05);
-  padding: 1rem 1.1rem;
-}
-
-.filters-form {
-  align-items: end;
-}
-
-.filters-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
 :host ::ng-deep .filters-switch .po-field {
   margin-top: 0;
-}
-
-:host ::ng-deep .bulk-actions po-button {
-  min-width: 180px;
 }
 
 :host ::ng-deep .po-page-header-title {
@@ -165,14 +107,6 @@
   background-color: #1A4E79 !important;
   border-color: #1A4E79 !important;
   color: #ffffff !important;
-}
-
-:host ::ng-deep .po-table .color-08,
-:host ::ng-deep .po-table .po-label-color-08,
-:host ::ng-deep .po-table [class*='color-08'] {
-  background-color: #e3e9ef !important;
-  border-color: #b8c7d4 !important;
-  color: #2f485d !important;
 }
 
 :host ::ng-deep .po-modal {

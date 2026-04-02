@@ -97,6 +97,33 @@
     [p-sort]="true"
     p-container="shadow"
   >
+    <ng-template p-table-row-template let-row let-i="rowIndex">
+      <div class="detail-card">
+        <div class="detail-card-header">
+          <strong>{{ row.userCode }}</strong>
+          <span>{{ row.name }}</span>
+        </div>
+
+        <div class="detail-card-grid">
+          <div>
+            <span>E-mail</span>
+            <strong>{{ row.email }}</strong>
+          </div>
+
+          <div>
+            <span>Centro de custo</span>
+            <strong>{{ row.costCenterCode }} - {{ row.costCenterName }}</strong>
+          </div>
+
+          <div>
+            <span>Status</span>
+            <strong [class.detail-status-enabled]="row.enabled" [class.detail-status-disabled]="!row.enabled">
+              {{ row.enabled ? 'Ativo' : 'Inativo' }}
+            </strong>
+          </div>
+        </div>
+      </div>
+    </ng-template>
   </po-table>
 
   <po-modal
