@@ -230,6 +230,12 @@ Payload sugerido:
 
 ---
 
+## Referências
+
+**Base utilizada:** Este projeto utilizou como base um CRUD desenvolvido por [Pablo Waniery](https://github.com/pablowaniery), com adaptações e melhorias específicas para o contexto de gerenciamento de acesso ao Power-BI.
+
+---
+
 ## Autor
 
 Desenvolvido por Viana.
