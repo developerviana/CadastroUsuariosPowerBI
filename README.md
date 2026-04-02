@@ -9,14 +9,14 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Aplicacao web para cadastro, consulta, alteracao e remocao de usuarios com acesso ao Power BI, com foco em usabilidade, organizacao do codigo e padrao visual institucional.
+Aplicação web para cadastro, consulta, alteração e remoção de usuários com acesso ao Power BI, com foco em usabilidade, organização de código e padrão visual institucional.
 
 [Sobre](#-sobre-o-projeto) •
 [Tecnologias](#-tecnologias) •
 [Arquitetura](#-arquitetura) •
 [Como Executar](#-como-executar) •
-[Endpoints Backend](#-endpoints-necessarios-no-backend) •
-[Boas Praticas](#-boas-praticas-adotadas)
+[Endpoints Backend](#-endpoints-necessários-no-backend) •
+[Boas Práticas](#-boas-práticas-adotadas)
 
 </div>
 
@@ -24,56 +24,56 @@ Aplicacao web para cadastro, consulta, alteracao e remocao de usuarios com acess
 
 ## Sobre o Projeto
 
-Este projeto implementa uma tela de CRUD para administracao de usuarios habilitados a visualizar conteudos do Power BI.
+Este projeto implementa uma tela de CRUD para administração de usuários habilitados a visualizar conteúdos do Power BI.
 
 ### Objetivos
 
-- Centralizar o controle de acesso de usuarios
-- Facilitar manutencao e auditoria de permissoes
+- Centralizar o controle de acesso de usuários
+- Facilitar manutenção e auditoria de permissões
 - Padronizar interface com componentes PO-UI
-- Preparar frontend para integracao limpa com API backend
+- Preparar o frontend para integração limpa com a API de backend
 
 ### Funcionalidades
 
-- Listagem paginada de usuarios habilitados
-- Pesquisa por nome, email e centro de custo
-- Cadastro de novo usuario
-- Edicao de dados existentes
-- Exclusao com confirmacao
-- Validacoes de campos obrigatorios e formato de email
+- Listagem paginada de usuários habilitados
+- Pesquisa por nome, e-mail e centro de custo
+- Cadastro de novo usuário
+- Edição de dados existentes
+- Exclusão com confirmação
+- Validações de campos obrigatórios e formato de e-mail
 
 ---
 
 ## Tecnologias
 
-| Tecnologia | Versao | Finalidade |
+| Tecnologia | Versão | Finalidade |
 |------------|--------|------------|
 | Angular | 17.x | Estrutura do frontend |
 | PO-UI | 17.x | Componentes visuais e UX |
 | TypeScript | 5.x | Tipagem e manutenibilidade |
-| SCSS | - | Estilizacao e tema institucional |
+| SCSS | - | Estilização e tema institucional |
 
 ---
 
 ## Arquitetura
 
-Organizacao baseada em separacao de responsabilidades:
+Organização baseada em separação de responsabilidades:
 
 ```
 src/
 	app/
 		models/       # Contratos tipados (DTOs e modelos)
-		services/     # Integracao HTTP e regras de acesso a dados
+		services/     # Integração HTTP e regras de acesso a dados
 	components/     # Componentes de tela e UI
 ```
 
-### Principios aplicados
+### Princípios aplicados
 
-- Componentes com responsabilidade unica
-- Services para isolamento da comunicacao com API
+- Componentes com responsabilidade única
+- Services para isolamento da comunicação com a API
 - Modelos fortemente tipados
 - Nomes descritivos e padronizados
-- Codigo preparado para testes e evolucao incremental
+- Código preparado para testes e evolução incremental
 
 ---
 
@@ -85,7 +85,7 @@ src/
 - npm 9+
 - Angular CLI (opcional)
 
-### Instalacao
+### Instalação
 
 ```bash
 npm install
@@ -97,9 +97,9 @@ npm install
 npm run start
 ```
 
-Aplicacao disponivel em `http://localhost:4200`.
+Aplicação disponível em `http://localhost:4200`.
 
-### Build de producao
+### Build de produção
 
 ```bash
 npm run build
@@ -113,13 +113,13 @@ npm run test
 
 ---
 
-## Endpoints Necessarios no Backend
+## Endpoints Necessários no Backend
 
-Sugestao de contrato REST para suportar o CRUD:
+Sugestão de contrato REST para suportar o CRUD:
 
-### 1. Listar usuarios habilitados
+### 1. Listar usuários habilitados
 
-- Metodo: `GET`
+- Método: `GET`
 - Rota: `/api/power-bi-users`
 - Query params: `page`, `pageSize`, `search`, `costCenter`
 
@@ -147,14 +147,14 @@ Resposta esperada:
 }
 ```
 
-### 2. Buscar usuario por id
+### 2. Buscar usuário por id
 
-- Metodo: `GET`
+- Método: `GET`
 - Rota: `/api/power-bi-users/{id}`
 
-### 3. Criar usuario habilitado
+### 3. Criar usuário habilitado
 
-- Metodo: `POST`
+- Método: `POST`
 - Rota: `/api/power-bi-users`
 
 Payload sugerido:
@@ -170,49 +170,34 @@ Payload sugerido:
 }
 ```
 
-### 4. Atualizar usuario habilitado
+### 4. Atualizar usuário habilitado
 
-- Metodo: `PUT`
+- Método: `PUT`
 - Rota: `/api/power-bi-users/{id}`
 
-### 5. Remover usuario habilitado
+### 5. Remover usuário habilitado
 
-- Metodo: `DELETE`
+- Método: `DELETE`
 - Rota: `/api/power-bi-users/{id}`
 
 ### 6. Opcional: consulta de centros de custo
 
-- Metodo: `GET`
+- Método: `GET`
 - Rota: `/api/cost-centers`
 - Uso: popular dropdown/autocomplete de centro de custo
 
 ---
 
-## Boas Praticas Adotadas
+## Boas Práticas Adotadas
 
-- Separacao entre camada de apresentacao e servicos
-- Nomenclatura consistente para componentes, modelos e metodos
-- Padrao visual com variaveis de tema (azul claro e azul escuro)
-- Validacoes no frontend para reduzir erros de entrada
-- Estrutura pronta para testes unitarios e de integracao
-
----
-
-## Roadmap
-
-- Integracao com autenticacao e controle de perfil
-- Auditoria de alteracoes por usuario
-- Exportacao da listagem para CSV
-- Filtros avancados por status e area
-
----
-
-## Licenca
-
-Este projeto esta sob a licenca MIT. Consulte o arquivo [LICENSE](LICENSE).
+- Separação entre camada de apresentação e serviços
+- Nomenclatura consistente para componentes, modelos e métodos
+- Padrão visual com variáveis de tema (azul claro e azul escuro)
+- Validações no frontend para reduzir erros de entrada
+- Estrutura pronta para testes unitários e de integração
 
 ---
 
 ## Autor
 
-Desenvolvido por Equipe Produto Exemplo.
+Desenvolvido por Viana.
