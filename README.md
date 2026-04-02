@@ -114,7 +114,6 @@ Aplicação disponível em `http://localhost:4200`.
 npm run build
 ```
 
-```
 
 ---
 
