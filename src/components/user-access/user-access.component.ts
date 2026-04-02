@@ -14,6 +14,7 @@ import {
   PoTableComponent,
   PoTableAction,
   PoTableColumn,
+  PoTableRowTemplateArrowDirection,
   PoTableModule
 } from '@po-ui/ng-components';
 
@@ -87,6 +88,8 @@ export class UserAccessComponent implements OnInit {
     term: [''],
     onlyEnabled: [false]
   });
+
+  public readonly rowTemplateArrowDirection = PoTableRowTemplateArrowDirection.Right;
 
   public ngOnInit(): void {
     this.loadUsers();
@@ -352,7 +355,9 @@ export class UserAccessComponent implements OnInit {
     }
 
     const firstUser = users[0] as unknown as Record<string, unknown>;
-    return Object.keys(firstUser).map((property): PoTableColumn => {
+    return Object.keys(firstUser)
+      .filter(property => property !== 'id')
+      .map((property): PoTableColumn => {
       if (property === 'enabled') {
         return {
           property,
@@ -369,7 +374,7 @@ export class UserAccessComponent implements OnInit {
         property,
         label: this.toColumnLabel(property)
       };
-    });
+      });
   }
 
   private toColumnLabel(property: string): string {
