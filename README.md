@@ -130,11 +130,11 @@ Resposta esperada:
 	"items": [
 		{
 			"id": 1,
-			"userCode": "000028",
-			"name": "KAMYLA.BORGES",
-			"email": "kamyla@climaesociedade.org",
-			"costCenterCode": "71100",
-			"costCenterName": "E01 - UTSAS",
+			"userCode": "USR-001",
+			"name": "ANA EXEMPLO",
+			"email": "ana.exemplo@organizacao-ficticia.org",
+			"costCenterCode": "CC-1001",
+			"costCenterName": "CENTRO DE CUSTO A",
 			"active": true,
 			"createdAt": "2026-04-02T12:00:00Z",
 			"updatedAt": "2026-04-02T12:00:00Z"
@@ -161,11 +161,11 @@ Payload sugerido:
 
 ```json
 {
-	"userCode": "000041",
-	"name": "TALITA.BISPO",
-	"email": "talita.bispo@climaesociedade.org",
-	"costCenterCode": "72701",
-	"costCenterName": "A CLASSIFICAR",
+	"userCode": "USR-002",
+	"name": "BRUNO DEMO",
+	"email": "bruno.demo@organizacao-ficticia.org",
+	"costCenterCode": "CC-2002",
+	"costCenterName": "CENTRO DE CUSTO B",
 	"active": true
 }
 ```
@@ -215,4 +215,4 @@ Este projeto esta sob a licenca MIT. Consulte o arquivo [LICENSE](LICENSE).
 
 ## Autor
 
-Desenvolvido por [developerviana](https://github.com/developerviana).
+Desenvolvido por Equipe Produto Exemplo.
