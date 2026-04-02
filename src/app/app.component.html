@@ -1,14 +1,16 @@
 <div class="po-wrapper">
   <po-menu [p-menus]="menuItems">
-    <div *p-menu-footer-template class="menu-footer">
-      <po-button
-        p-label="Sair da rotina"
-        p-kind="tertiary"
-        p-icon="po-icon-exit"
-        (p-click)="exitRoutine()"
-      >
-      </po-button>
-    </div>
+    <ng-template p-menu-footer-template>
+      <div class="menu-footer">
+        <po-button
+          p-label="Sair da rotina"
+          p-kind="tertiary"
+          p-icon="po-icon-exit"
+          (p-click)="exitRoutine()"
+        >
+        </po-button>
+      </div>
+    </ng-template>
   </po-menu>
 
   <router-outlet></router-outlet>
