@@ -1,7 +1,0 @@
-<po-dynamic-form #dynamicForm p-auto-focus="name" [p-fields]="fields" [p-value]="expense">
-</po-dynamic-form>
-<div class="po-row">
-  <po-button class="po-md-3" p-label="Cadastrar" [p-disabled]="dynamicForm?.form?.invalid ? true : false"
-    (p-click)="saveNewExpense(dynamicForm.form.value); dynamicForm.form.reset()">
-  </po-button>
-</div>

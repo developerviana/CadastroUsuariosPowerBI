@@ -1,14 +1,13 @@
 import { Routes } from '@angular/router';
-import { PoTableComponent } from '../components/po-table/po-table.component';
-import { PoDynamicFormComponent } from '../components/po-dynamic-form/po-dynamic-form.component';
+import { UserAccessComponent } from '../components/user-access/user-access.component';
 
 export const routes: Routes = [
   {
     path: '',
-    component: PoTableComponent
+    component: UserAccessComponent
   },
   {
-    path: 'cadastro',
-    component: PoDynamicFormComponent
-  }
+    path: '**',
+    redirectTo: ''
+  },
 ];

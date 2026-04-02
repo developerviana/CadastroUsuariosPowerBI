@@ -1,10 +1,5 @@
-<div class="app-shell">
-  <po-menu [p-collapsed]="false" [p-menus]="menuItems">
-    <div *p-menu-header-template class="menu-header">
-      Cadastro de Usuarios
-      <small>Power BI</small>
-    </div>
-
+<div class="po-wrapper">
+  <po-menu [p-menus]="menuItems">
     <div *p-menu-footer-template class="menu-footer">
       <po-button
         p-label="Sair da rotina"
@@ -16,7 +11,5 @@
     </div>
   </po-menu>
 
-  <main class="app-content">
-    <router-outlet></router-outlet>
-  </main>
+  <router-outlet></router-outlet>
 </div>

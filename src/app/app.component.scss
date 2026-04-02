@@ -3,41 +3,23 @@
 	min-height: 100vh;
 }
 
-.app-shell {
-	display: grid;
-	grid-template-columns: 280px 1fr;
-	min-height: 100vh;
-}
-
-.app-content {
-	margin: 0 auto;
-	max-width: 1320px;
-	padding: 1rem 1.25rem 2rem;
-	width: 100%;
-}
-
 :host ::ng-deep .po-menu {
-	background: linear-gradient(180deg, var(--brand-blue-700), var(--brand-blue-600));
-	border-right: 1px solid rgba(255, 255, 255, 0.15);
-	box-shadow: 4px 0 18px rgba(8, 49, 77, 0.2);
+	background: #e3e9ef;
+	border-right: 1px solid rgba(63, 89, 112, 0.18);
 }
 
-.menu-header {
-	color: #ffffff;
-	font-size: 1rem;
-	font-weight: 700;
-	line-height: 1.3;
-	padding: 1rem 1rem 0.5rem;
+:host ::ng-deep .po-menu .po-menu-item,
+:host ::ng-deep .po-menu .po-menu-item-text,
+:host ::ng-deep .po-menu .po-menu-item-icon {
+	color: var(--brand-blue-900);
 }
 
-.menu-header small {
-	display: block;
-	font-size: 0.8rem;
-	font-weight: 500;
-	letter-spacing: 0.06em;
-	margin-top: 0.15rem;
-	opacity: 0.9;
-	text-transform: uppercase;
+:host ::ng-deep .po-menu .po-menu-item:hover {
+	background: rgba(255, 255, 255, 0.72);
+}
+
+:host ::ng-deep .po-menu .po-menu-item-selected {
+	background: rgba(255, 255, 255, 0.88);
 }
 
 .menu-footer {
@@ -46,20 +28,4 @@
 
 .menu-footer po-button {
 	width: 100%;
-}
-
-:host ::ng-deep .po-menu .po-menu-item-text,
-:host ::ng-deep .po-menu .po-menu-header,
-:host ::ng-deep .po-menu .po-menu-item-icon {
-	color: #ffffff;
-}
-
-:host ::ng-deep .po-menu-item:hover {
-	background: rgba(255, 255, 255, 0.12);
-}
-
-@media (max-width: 991px) {
-	.app-shell {
-		grid-template-columns: 1fr;
-	}
 }

@@ -1,16 +1,16 @@
 :root {
-	--brand-blue-050: #e9f5ff;
-	--brand-blue-100: #cce8ff;
-	--brand-blue-400: #2e8fc7;
-	--brand-blue-500: #1778b6;
-	--brand-blue-600: #0b5f95;
-	--brand-blue-700: #0a4a75;
-	--brand-blue-900: #08314d;
+	--brand-blue-050: #f2f6fa;
+	--brand-blue-100: #dbe4ec;
+	--brand-blue-400: #6b8aa3;
+	--brand-blue-500: #1A4E79;
+	--brand-blue-600: #163f62;
+	--brand-blue-700: #12324e;
+	--brand-blue-900: #0c2235;
 
 	/* Overrides de tokens PO-UI para remover roxo/rosa do tema default. */
 	--color-brand-01-lightest: #e9f5ff;
 	--color-brand-01-lighter: #cce8ff;
-	--color-brand-01-light: #9dd0ef;
+	--color-brand-01-light: #b6cadd;
 	--color-brand-01-base: var(--brand-blue-500);
 	--color-brand-01-dark: var(--brand-blue-600);
 	--color-brand-01-darker: var(--brand-blue-700);
@@ -26,7 +26,7 @@
 	--color-primary: var(--brand-blue-500);
 	--color-primary-dark-20: var(--brand-blue-600);
 	--color-primary-dark-40: var(--brand-blue-700);
-	--color-primary-alpha-50: rgba(23, 120, 182, 0.5);
+	--color-primary-alpha-50: rgba(26, 78, 121, 0.5);
 }
 
 html,
@@ -36,12 +36,27 @@ body {
 }
 
 body {
-	background:
-		radial-gradient(circle at 15% 20%, rgba(46, 143, 199, 0.2), transparent 35%),
-		radial-gradient(circle at 90% 80%, rgba(11, 95, 149, 0.16), transparent 30%),
-		linear-gradient(180deg, #f2f9ff 0%, #ffffff 60%);
+	position: relative;
+	background: rgba(31, 47, 61, 0.78);
 	scrollbar-color: var(--brand-blue-500) var(--brand-blue-050);
 	scrollbar-width: thin;
+}
+
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	background: rgba(31, 47, 61, 0.78);
+	pointer-events: none;
+	z-index: -1;
+}
+
+.po-wrapper,
+.po-page,
+.po-page-default,
+.po-page-content,
+.po-page-list-container {
+	background-color: transparent !important;
 }
 
 *::-webkit-scrollbar {

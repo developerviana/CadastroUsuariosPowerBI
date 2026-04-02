@@ -16,8 +16,9 @@ export class AppComponent {
 
   public readonly menuItems: PoMenuItem[] = [
     {
-      label: 'Cadastro de Usuarios Power BI',
+      label: 'Usuarios Power BI',
       icon: 'po-icon-users',
+      shortLabel: 'Usuarios',
       link: '/'
     }
   ];
