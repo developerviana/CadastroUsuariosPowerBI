@@ -24,6 +24,12 @@ export class AppComponent implements OnInit {
     module: '-'
   };
 
+  public userContext = {
+    id: '-',
+    login: '-',
+    name: '-'
+  };
+
   public menuItems: PoMenuItem[] = [
     {
       label: 'Usuarios Power BI',
@@ -69,15 +75,29 @@ export class AppComponent implements OnInit {
   }
 
   public getUserThreadInfo(): void {
+    const threadInfo = this.proThreadInfoService.proThreadInfo;
+
+    this.userContext = {
+      id: threadInfo?.userId || '-',
+      login: threadInfo?.userName || '-',
+      name: threadInfo?.userName || '-'
+    };
+
     this.proThreadInfoService.getUserInfoThread().subscribe({
       next: userInfo => {
-        const userLabel = userInfo?.displayName || userInfo?.userName || userInfo?.complete_name || 'Usuario';
+        const userLabel = userInfo?.displayName || userInfo?.userName || threadInfo?.userName || 'Usuario';
         const nextItems = [...this.menuItems];
 
         nextItems[0] = {
           ...nextItems[0],
           label: userLabel,
-          shortLabel: userLabel
+          shortLabel: userInfo?.userName || threadInfo?.userName || userLabel
+        };
+
+        this.userContext = {
+          id: userInfo?.id || threadInfo?.userId || '-',
+          login: userInfo?.userName || threadInfo?.userName || '-',
+          name: userLabel
         };
 
         this.menuItems = nextItems;
