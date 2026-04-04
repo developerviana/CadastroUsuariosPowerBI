@@ -264,6 +264,10 @@ export class UserAccessComponent implements OnInit {
     });
   }
 
+  public refreshUsers(): void {
+    this.loadUsers();
+  }
+
   public showCreateFromEmptyState(): void {
     this.clearFilters();
     this.openCreateModal();

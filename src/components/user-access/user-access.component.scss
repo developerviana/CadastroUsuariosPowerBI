@@ -3,10 +3,17 @@
   animation: fade-in 280ms ease-out;
 }
 
+:host ::ng-deep .po-page-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
 .dashboard-resume {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .resume-item {
@@ -15,7 +22,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 24px rgba(31, 47, 61, 0.08);
   cursor: pointer;
-  padding: 1rem 1.05rem;
+  padding: 0.75rem 0.95rem;
   transition: background-color 240ms ease, transform 240ms ease, box-shadow 240ms ease;
 }
 
@@ -51,7 +58,26 @@
 .resume-item-action {
   align-items: center;
   display: flex;
+  gap: 0.5rem;
   justify-content: flex-end;
+}
+
+.table-viewport {
+  min-height: 260px;
+  max-height: calc(100vh - 330px);
+  overflow-y: auto;
+}
+
+.filters-panel {
+  margin-bottom: 0.25rem;
+}
+
+:host ::ng-deep .po-page-header-title {
+  margin-bottom: 0.15rem;
+}
+
+:host ::ng-deep .po-page-header-subtitle {
+  margin-bottom: 0.3rem;
 }
 
 :host ::ng-deep .po-page-header-title {
@@ -148,6 +174,12 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .table-viewport {
+    max-height: calc(100vh - 280px);
   }
 }
 
