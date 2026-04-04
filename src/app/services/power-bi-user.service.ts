@@ -1,11 +1,30 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map, of } from 'rxjs';
 import { PowerBiUser, PowerBiUserUpsert } from '../models/power-bi-user.model';
+import { LOCAL_AUTH_CONFIG } from '../config/local-auth.config';
+
+interface UserBiApiRow {
+  filial?: string;
+  usuario?: string;
+  nome?: string;
+  email?: string;
+  ccusto?: string;
+  ccnome?: string;
+  status?: string;
+}
+
+interface UserBiApiResponse {
+  success?: boolean;
+  rows?: UserBiApiRow[];
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class PowerBiUserService {
+  private readonly http = inject(HttpClient);
+  private readonly usersEndpoint = 'http://localhost:8181/rest/userbi';
   private readonly storageKey = 'power-bi-users';
 
   private readonly seedData: PowerBiUser[] = [
@@ -84,7 +103,14 @@ export class PowerBiUserService {
   ];
 
   public getAll(): Observable<PowerBiUser[]> {
-    return of(this.load());
+    return this.http.get<UserBiApiResponse>(this.usersEndpoint, {
+      headers: this.getBasicAuthHeaders()
+    }).pipe(
+      map(response => {
+        const rows = response?.rows ?? [];
+        return rows.map((row, index) => this.mapApiRowToUser(row, index));
+      })
+    );
   }
 
   public create(payload: PowerBiUserUpsert): Observable<PowerBiUser> {
@@ -132,5 +158,29 @@ export class PowerBiUserService {
 
   private save(users: PowerBiUser[]): void {
     localStorage.setItem(this.storageKey, JSON.stringify(users));
+  }
+
+  private mapApiRowToUser(row: UserBiApiRow, index: number): PowerBiUser {
+    return {
+      id: index + 1,
+      userCode: row.usuario ?? '',
+      name: row.nome ?? '',
+      email: row.email ?? '',
+      costCenterCode: row.ccusto ?? '',
+      costCenterName: row.ccnome ?? '',
+      enabled: this.toEnabled(row.status)
+    };
+  }
+
+  private toEnabled(status: string | undefined): boolean {
+    const normalizedStatus = (status ?? '').trim().toUpperCase();
+    return normalizedStatus !== '1' && normalizedStatus !== 'I' && normalizedStatus !== 'B';
+  }
+
+  private getBasicAuthHeaders(): HttpHeaders {
+    const credentials = btoa(`${LOCAL_AUTH_CONFIG.user}:${LOCAL_AUTH_CONFIG.password}`);
+    return new HttpHeaders({
+      Authorization: `Basic ${credentials}`
+    });
   }
 }
