@@ -1,5 +1,11 @@
 <div class="po-wrapper">
   <po-menu [p-menus]="menuItems"></po-menu>
 
+  <section class="session-context">
+    <span><strong>Empresa:</strong> {{ sessionContext.company }}</span>
+    <span><strong>Filial:</strong> {{ sessionContext.branch }}</span>
+    <span><strong>Módulo:</strong> {{ sessionContext.module }}</span>
+  </section>
+
   <router-outlet></router-outlet>
 </div>

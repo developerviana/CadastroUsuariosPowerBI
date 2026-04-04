@@ -37,3 +37,18 @@
 	line-height: 24px;
 	letter-spacing: 0;
 }
+
+.session-context {
+	align-items: center;
+	background: rgba(227, 233, 239, 0.6);
+	border-bottom: 1px solid rgba(63, 89, 112, 0.18);
+	display: flex;
+	gap: 1rem;
+	min-height: 36px;
+	padding: 0.5rem 1rem;
+}
+
+.session-context span {
+	color: var(--brand-blue-900);
+	font-size: 12px;
+}
