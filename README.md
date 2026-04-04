@@ -2,48 +2,29 @@
 
 # CadastroUsuariosPowerBI
 
-### Gestão de Usuários Habilitados no Power BI
+### Gestão de Usuários Habilitados no Power BI no Protheus
 
 [![Angular](https://img.shields.io/badge/Angular-17-DD0031?logo=angular)](https://angular.io/)
 [![PO-UI](https://img.shields.io/badge/PO--UI-17-0C69A8)](https://po-ui.io/)
+[![Protheus-lib-core](https://img.shields.io/badge/protheus--lib--core-17.3.4-8B5CF6)](https://tdn.totvs.com.br/display/public/framework/Protheus-lib-core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Aplicação web para cadastro, consulta, alteração e remoção de usuários com acesso ao Power BI, com foco em usabilidade, organização de código e padrão visual institucional.
-
-[Sobre](#-sobre-o-projeto) •
-[Tecnologias](#-tecnologias) •
-[Arquitetura](#-arquitetura) •
-[Como Executar](#-como-executar) •
-[Boas Práticas](#-boas-práticas-adotadas)
+[Visão Geral](#visao-geral) •
+[Tecnologias](#tecnologias) •
+[Funcionalidades](#funcionalidades) •
+[Integração Protheus](#integracao-protheus-lib-core) •
+[Execução](#como-executar) •
+[Estrutura](#estrutura-do-projeto)
 
 </div>
 
 ---
 
-## Sobre o Projeto
+## Visao Geral
 
-Este projeto implementa uma tela de CRUD para administração de usuários habilitados a visualizar conteúdos do Power BI.
+Aplicação Angular + PO-UI para administrar usuários com acesso ao Power BI, com foco em operação dentro do Protheus via FWCallApp.
 
-### Objetivos
-
-- Centralizar o controle de acesso de usuários
-- Facilitar manutenção e auditoria de permissões
-- Padronizar interface com componentes PO-UI
-- Preparar o frontend para integração limpa com a API de backend
-
-### Funcionalidades
-
-- Listagem dinâmica de usuários com colunas geradas a partir do JSON retornado
-- Pesquisa rápida por usuário, nome, e-mail e centro de custo
-- Filtro para exibir somente usuários ativos
-- Seleção múltipla com ações em lote para ativar, inativar e excluir
-- Detalhe por linha para visualizar e-mail, centro de custo e status
-- Estado vazio com mensagem contextual e ação de cadastro inicial
-- Cadastro de novo usuário
-- Edição de dados existentes
-- Exclusão com confirmação
-- Validações de campos obrigatórios e formato de e-mail
+O projeto foi evoluído para usar Protheus-lib-core como base de integração com contexto de sessão, identidade do usuário e fechamento nativo da rotina.
 
 ---
 
@@ -53,36 +34,42 @@ Este projeto implementa uma tela de CRUD para administração de usuários habil
 |------------|--------|------------|
 | Angular | 17.x | Estrutura do frontend |
 | PO-UI | 17.x | Componentes visuais e UX |
+| Protheus-lib-core | 17.3.4 | Integração nativa com Protheus |
 | TypeScript | 5.x | Tipagem e manutenibilidade |
-| SCSS | - | Estilização e tema institucional |
+| SCSS | - | Estilização e responsividade |
 
 ---
 
-## Arquitetura
+## Funcionalidades
 
-Organização baseada em separação de responsabilidades:
+- Listagem de usuários com dados de código, nome, e-mail, centro de custo e status.
+- Busca por múltiplos campos (usuário, nome, e-mail e centro de custo).
+- Filtro para exibir somente ativos.
+- Cadastro e edição de usuário.
+- Seleção múltipla com atualização de status em lote (ativar/inativar).
+- Autocomplete para usuário e centro de custo.
+- Exibição de contexto no layout: usuário, login, empresa, filial e módulo.
+- Ação de "Sair da rotina" integrada ao fechamento nativo do Protheus.
 
-```
-src/
-	app/
-		models/       # Contratos tipados (DTOs e modelos)
-		services/     # Integração HTTP e regras de acesso a dados
-	components/     # Componentes de tela e UI
-```
+---
 
-### Princípios aplicados
+## Integracao Protheus-lib-core
 
-- Componentes com responsabilidade única
-- Services para isolamento da comunicação com a API
-- Modelos fortemente tipados
-- Nomes descritivos e padronizados
-- Código preparado para testes e evolução incremental
+Dependência utilizada:
 
-## Tema e Tipografia
+- @totvs/protheus-lib-core: 17.3.4
 
-O projeto usa o padrão de customização recomendado pela PO-UI com tokens CSS globais. O tema é carregado com os arquivos de variáveis e core do PO-UI, permitindo sobrescrever cores, tipografia e estados visuais sem quebrar a base do framework.
+Pontos aplicados no projeto:
 
-As personalizações principais estão centralizadas em `src/styles.scss` e seguem a escala de tipografia da PO-UI para títulos, textos e menus.
+- `ProtheusLibCoreModule` registrado no bootstrap da aplicação.
+- `ProAppConfigService` para detectar execução dentro do Protheus (`insideProtheus`) e fechar app com `callAppClose`.
+- `ProThreadInfoService` para obter identidade do usuário da thread.
+- `ProSessionInfoService` para carregar empresa, filial e módulo no layout.
+
+Comportamento de autenticação HTTP:
+
+- Dentro do Protheus: requisições sem Basic manual (fluxo nativo/interceptadores).
+- Fora do Protheus (desenvolvimento local): fallback para Basic Auth no service.
 
 ---
 
@@ -92,47 +79,57 @@ As personalizações principais estão centralizadas em `src/styles.scss` e segu
 
 - Node.js 18+
 - npm 9+
-- Angular CLI (opcional)
 
-### Instalação
+### Instalar dependências
 
 ```bash
 npm install
 ```
 
-### Ambiente de desenvolvimento
+### Rodar em desenvolvimento
 
 ```bash
 npm run start
 ```
 
-Aplicação disponível em `http://localhost:4200`.
+Aplicação local: http://localhost:4200
 
-### Build de produção
+### Build
 
 ```bash
 npm run build
 ```
 
+---
+
+## Estrutura do Projeto
+
+```text
+src/
+	app/
+		models/        # contratos tipados
+		services/      # integração HTTP e regras de acesso
+		app.component* # menu, contexto de sessão e identidade
+		app.config.ts  # providers globais (PO-UI e Protheus-lib-core)
+	components/
+		user-access/   # tela principal de gestão de usuários
+backend/
+	controller/      # endpoints REST TLPP
+	service/         # regras de negócio TLPP
+```
 
 ---
 
-## Boas Práticas Adotadas
+## Observacoes
 
-- Separação entre camada de apresentação e serviços
-- Nomenclatura consistente para componentes, modelos e métodos
-- Padrão visual com variáveis de tema (azul claro e azul escuro)
-- Validações no frontend para reduzir erros de entrada
-- Estrutura pronta para testes unitários e de integração
+- O backend usa `recno` como identificador técnico de atualização de registro.
+- O status segue regra de negócio: ativo = `2`, inativo = `1`.
+- A experiência ideal de autenticação/contexto é obtida quando o app roda embarcado no Protheus.
 
 ---
 
-## Referências
+## Referencias
 
-**Base utilizada:** Este projeto utilizou como base um CRUD desenvolvido por [Pablo Waniery](https://github.com/pablooficial), com adaptações e melhorias específicas para o contexto de gerenciamento de acesso ao Power-BI.
-
----
-
-## Autor
-
-Desenvolvido por Viana.
+- Documentação oficial: https://tdn.totvs.com.br/display/public/framework/Protheus-lib-core
+- PO-UI: https://po-ui.io/
+- Base utilizada: CRUD de [Pablo Waniery](https://github.com/pablooficial), adaptado para o cenário deste projeto.

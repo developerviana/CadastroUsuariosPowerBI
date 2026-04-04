@@ -1,17 +1,13 @@
 <div class="po-wrapper">
-  <po-menu [p-menus]="menuItems">
-    <ng-template p-menu-footer-template>
-      <div class="menu-footer">
-        <po-button
-          p-label="Sair da rotina"
-          p-kind="tertiary"
-          p-icon="po-icon-exit"
-          (p-click)="exitRoutine()"
-        >
-        </po-button>
-      </div>
-    </ng-template>
-  </po-menu>
+  <po-menu [p-menus]="menuItems"></po-menu>
+
+  <section class="session-context">
+    <span><strong>Usuário:</strong> {{ userContext.name }}</span>
+    <span><strong>Login:</strong> {{ userContext.login }}</span>
+    <span><strong>Empresa:</strong> {{ sessionContext.company }}</span>
+    <span><strong>Filial:</strong> {{ sessionContext.branch }}</span>
+    <span><strong>Módulo:</strong> {{ sessionContext.module }}</span>
+  </section>
 
   <router-outlet></router-outlet>
 </div>

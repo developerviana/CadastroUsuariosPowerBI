@@ -52,3 +52,10 @@ Thumbs.db
 # Documentação interna e posts
 linkedin-post.md
 IMPLEMENTACAO-PROTHEUS.md
+
+/backend
+
+.github
+
+# Local auth config (do not commit credentials)
+src/app/config/local-auth.config.ts

@@ -37,3 +37,43 @@
 	line-height: 24px;
 	letter-spacing: 0;
 }
+
+.session-context {
+	align-items: center;
+	background: rgba(227, 233, 239, 0.6);
+	border-bottom: 1px solid rgba(63, 89, 112, 0.18);
+	display: flex;
+	gap: 1rem;
+	min-height: 36px;
+	margin-left: var(--menu-width);
+	padding: 0.5rem 1rem;
+	transition: margin-left 0.2s ease, width 0.2s ease;
+	width: calc(100% - var(--menu-width));
+}
+
+.session-context span {
+	color: var(--brand-blue-900);
+	font-size: 12px;
+}
+
+:host ::ng-deep .po-wrapper.po-collapsed-menu .session-context {
+	margin-left: var(--collapsed-menu-width);
+	width: calc(100% - var(--collapsed-menu-width));
+}
+
+@media screen and (max-width: 1200px) {
+	.session-context {
+		margin-left: 0;
+		padding-inline: 3.5rem 1rem;
+		width: 100%;
+	}
+}
+
+@media screen and (max-width: 768px) {
+	.session-context {
+		align-items: flex-start;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding-inline: 3rem 1rem;
+	}
+}

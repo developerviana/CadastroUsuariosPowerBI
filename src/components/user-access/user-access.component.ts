@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, merge, of, switchMap } from 'rxjs';
 import {
   PoButtonModule,
-  PoDialogModule,
-  PoDialogService,
   PoFieldModule,
   PoModalAction,
   PoModalComponent,
@@ -31,7 +31,6 @@ import { PowerBiUserService } from '../../app/services/power-bi-user.service';
     PoTableModule,
     PoButtonModule,
     PoModalModule,
-    PoDialogModule,
     PoFieldModule,
   ],
   templateUrl: './user-access.component.html',
@@ -43,13 +42,21 @@ export class UserAccessComponent implements OnInit {
 
   private readonly service = inject(PowerBiUserService);
   private readonly notification = inject(PoNotificationService);
-  private readonly dialogService = inject(PoDialogService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   public users: PowerBiUser[] = [];
   public columns: PoTableColumn[] = [];
   public isLoading = true;
-  public editingUserId: number | null = null;
+  public editingRecno: number | null = null;
+  public isSearchingSystemUsers = false;
+  public systemUserSuggestions: Array<{ usuario: string; nome: string }> = [];
+  public userSearchNotice = '';
+  public isSearchingCostCenters = false;
+  public costCenterSuggestions: Array<{ ccusto: string; ccnome: string }> = [];
+  public costCenterSearchNotice = '';
+
+  private readonly minAutocompleteSearchLength = 2;
 
   private readonly columnLabelMap: Record<string, string> = {
     id: 'Id',
@@ -66,12 +73,6 @@ export class UserAccessComponent implements OnInit {
       label: 'Editar',
       icon: 'po-icon-edit',
       action: (row: unknown) => this.handleEditAction(row)
-    },
-    {
-      label: 'Excluir',
-      icon: 'po-icon-delete',
-      type: 'danger',
-      action: (row: unknown) => this.handleDeleteAction(row)
     }
   ];
 
@@ -93,6 +94,8 @@ export class UserAccessComponent implements OnInit {
 
   public ngOnInit(): void {
     this.loadUsers();
+    this.setupSystemUserSearch();
+    this.setupCostCenterSearch();
   }
 
   public get pageSubtitle(): string {
@@ -146,7 +149,7 @@ export class UserAccessComponent implements OnInit {
   }
 
   public get modalTitle(): string {
-    return this.editingUserId ? 'Editar usuario' : 'Novo usuario';
+    return this.editingRecno ? 'Editar usuario' : 'Novo usuario';
   }
 
   public get primaryModalAction(): PoModalAction {
@@ -163,7 +166,11 @@ export class UserAccessComponent implements OnInit {
   };
 
   public openCreateModal(): void {
-    this.editingUserId = null;
+    this.editingRecno = null;
+    this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
+    this.userSearchNotice = '';
+    this.costCenterSearchNotice = '';
     this.userForm.reset({
       userCode: '',
       name: '',
@@ -176,7 +183,11 @@ export class UserAccessComponent implements OnInit {
   }
 
   public openEditModal(row: PowerBiUser): void {
-    this.editingUserId = row.id;
+    this.editingRecno = row.recno;
+    this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
+    this.userSearchNotice = '';
+    this.costCenterSearchNotice = '';
     this.userForm.reset({
       userCode: row.userCode,
       name: row.name,
@@ -189,8 +200,28 @@ export class UserAccessComponent implements OnInit {
   }
 
   public closeModal(): void {
+    this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
+    this.userSearchNotice = '';
+    this.costCenterSearchNotice = '';
     this.userModal.close();
     this.userForm.markAsPristine();
+  }
+
+  public selectSystemUserSuggestion(user: { usuario: string; nome: string }): void {
+    this.userForm.patchValue({
+      userCode: user.usuario,
+      name: user.nome
+    }, { emitEvent: false });
+    this.systemUserSuggestions = [];
+  }
+
+  public selectCostCenterSuggestion(costCenter: { ccusto: string; ccnome: string }): void {
+    this.userForm.patchValue({
+      costCenterCode: costCenter.ccusto,
+      costCenterName: costCenter.ccnome
+    }, { emitEvent: false });
+    this.costCenterSuggestions = [];
   }
 
   public submitForm(): void {
@@ -202,8 +233,8 @@ export class UserAccessComponent implements OnInit {
 
     const payload = this.userForm.getRawValue() as PowerBiUserUpsert;
 
-    if (this.editingUserId) {
-      this.service.update(this.editingUserId, payload).subscribe(() => {
+    if (this.editingRecno) {
+      this.service.update(this.editingRecno, payload).subscribe(() => {
         this.notification.success('Usuario atualizado com sucesso.');
         this.closeModal();
         this.loadUsers();
@@ -218,19 +249,6 @@ export class UserAccessComponent implements OnInit {
     });
   }
 
-  public confirmDelete(row: PowerBiUser): void {
-    this.dialogService.confirm({
-      title: 'Excluir usuario',
-      message: `Deseja realmente excluir o usuario ${row.name}?`,
-      confirm: () => {
-        this.service.delete(row.id).subscribe(() => {
-          this.notification.success('Usuario excluido com sucesso.');
-          this.loadUsers();
-        });
-      }
-    });
-  }
-
   public enableSelectedUsers(): void {
     this.updateSelectedUsers(true, 'ativados');
   }
@@ -239,37 +257,15 @@ export class UserAccessComponent implements OnInit {
     this.updateSelectedUsers(false, 'inativados');
   }
 
-  public confirmDeleteSelectedUsers(): void {
-    const selectedUsers = this.getSelectedUsers();
-
-    if (selectedUsers.length === 0) {
-      return;
-    }
-
-    const message =
-      selectedUsers.length === 1
-        ? `Deseja realmente excluir o usuario ${selectedUsers[0].name}?`
-        : `Deseja realmente excluir os ${selectedUsers.length} usuarios selecionados?`;
-
-    this.dialogService.confirm({
-      title: 'Excluir usuarios selecionados',
-      message,
-      confirm: () => {
-        selectedUsers.forEach(user => {
-          this.service.delete(user.id).subscribe();
-        });
-
-        this.notification.success('Usuarios excluidos com sucesso.');
-        this.loadUsers();
-      }
-    });
-  }
-
   public clearFilters(): void {
     this.filtersForm.reset({
       term: '',
       onlyEnabled: false
     });
+  }
+
+  public refreshUsers(): void {
+    this.loadUsers();
   }
 
   public showCreateFromEmptyState(): void {
@@ -292,6 +288,166 @@ export class UserAccessComponent implements OnInit {
     });
   }
 
+  private setupSystemUserSearch(): void {
+    merge(
+      this.userForm.controls.userCode.valueChanges,
+      this.userForm.controls.name.valueChanges
+    )
+      .pipe(
+        map(() => ({
+          codeTerm: this.userForm.controls.userCode.value.trim(),
+          nameTerm: this.userForm.controls.name.value.trim()
+        })),
+        debounceTime(300),
+        distinctUntilChanged((previous, current) => {
+          return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
+        }),
+        switchMap(({ codeTerm, nameTerm }) => {
+          if (this.editingRecno) {
+            this.systemUserSuggestions = [];
+            this.isSearchingSystemUsers = false;
+            return of([] as Array<{ usuario: string; nome: string }>);
+          }
+
+          return this.searchSystemUsersWithFallback(codeTerm, nameTerm);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(users => {
+        this.systemUserSuggestions = users;
+      });
+  }
+
+  private setupCostCenterSearch(): void {
+    merge(
+      this.userForm.controls.costCenterCode.valueChanges,
+      this.userForm.controls.costCenterName.valueChanges
+    )
+      .pipe(
+        map(() => ({
+          codeTerm: this.userForm.controls.costCenterCode.value.trim(),
+          nameTerm: this.userForm.controls.costCenterName.value.trim()
+        })),
+        debounceTime(300),
+        distinctUntilChanged((previous, current) => {
+          return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
+        }),
+        switchMap(({ codeTerm, nameTerm }) => {
+          if (this.editingRecno) {
+            this.costCenterSuggestions = [];
+            this.isSearchingCostCenters = false;
+            return of([] as Array<{ ccusto: string; ccnome: string }>);
+          }
+
+          return this.searchCostCentersWithFallback(codeTerm, nameTerm);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(costCenters => {
+        this.costCenterSuggestions = costCenters;
+      });
+  }
+
+  private searchSystemUsersWithFallback(
+    codeTerm: string,
+    nameTerm: string
+  ) {
+    const normalizedCode = codeTerm.trim();
+    const normalizedName = nameTerm.trim();
+
+    if (normalizedCode.length >= this.minAutocompleteSearchLength) {
+      this.isSearchingSystemUsers = true;
+      return this.service.searchSystemUsersByName(normalizedCode).pipe(
+        switchMap(results => {
+          if (results.length > 0) {
+            this.userSearchNotice = '';
+            return of(results);
+          }
+
+          if (normalizedName.length >= this.minAutocompleteSearchLength && normalizedName !== normalizedCode) {
+            this.userSearchNotice = 'Nao encontramos pelo codigo. Tentando pelo nome.';
+            return this.service.searchSystemUsersByName(normalizedName);
+          }
+
+          this.userSearchNotice = 'Nao encontramos pelo codigo. Tente pesquisar pelo nome.';
+          return of([] as Array<{ usuario: string; nome: string }>);
+        }),
+        catchError(() => {
+          this.userSearchNotice = '';
+          return of([] as Array<{ usuario: string; nome: string }>);
+        }),
+        finalize(() => {
+          this.isSearchingSystemUsers = false;
+        })
+      );
+    }
+
+    if (normalizedName.length >= this.minAutocompleteSearchLength) {
+      this.userSearchNotice = '';
+      this.isSearchingSystemUsers = true;
+      return this.service.searchSystemUsersByName(normalizedName).pipe(
+        catchError(() => of([] as Array<{ usuario: string; nome: string }>)),
+        finalize(() => {
+          this.isSearchingSystemUsers = false;
+        })
+      );
+    }
+
+    this.userSearchNotice = '';
+    this.isSearchingSystemUsers = false;
+    return of([] as Array<{ usuario: string; nome: string }>);
+  }
+
+  private searchCostCentersWithFallback(
+    codeTerm: string,
+    nameTerm: string
+  ) {
+    const normalizedCode = codeTerm.trim();
+    const normalizedName = nameTerm.trim();
+
+    if (normalizedCode.length >= this.minAutocompleteSearchLength) {
+      this.isSearchingCostCenters = true;
+      return this.service.searchCostCentersByTerm(normalizedCode).pipe(
+        switchMap(results => {
+          if (results.length > 0) {
+            this.costCenterSearchNotice = '';
+            return of(results);
+          }
+
+          if (normalizedName.length >= this.minAutocompleteSearchLength && normalizedName !== normalizedCode) {
+            this.costCenterSearchNotice = 'Nao encontramos pelo codigo. Tentando pelo nome.';
+            return this.service.searchCostCentersByTerm(normalizedName);
+          }
+
+          this.costCenterSearchNotice = 'Nao encontramos pelo codigo. Tente pesquisar pelo nome.';
+          return of([] as Array<{ ccusto: string; ccnome: string }>);
+        }),
+        catchError(() => {
+          this.costCenterSearchNotice = '';
+          return of([] as Array<{ ccusto: string; ccnome: string }>);
+        }),
+        finalize(() => {
+          this.isSearchingCostCenters = false;
+        })
+      );
+    }
+
+    if (normalizedName.length >= this.minAutocompleteSearchLength) {
+      this.costCenterSearchNotice = '';
+      this.isSearchingCostCenters = true;
+      return this.service.searchCostCentersByTerm(normalizedName).pipe(
+        catchError(() => of([] as Array<{ ccusto: string; ccnome: string }>)),
+        finalize(() => {
+          this.isSearchingCostCenters = false;
+        })
+      );
+    }
+
+    this.costCenterSearchNotice = '';
+    this.isSearchingCostCenters = false;
+    return of([] as Array<{ ccusto: string; ccnome: string }>);
+  }
+
   private updateSelectedUsers(enabled: boolean, statusLabel: 'ativados' | 'inativados'): void {
     const selectedUsers = this.getSelectedUsers();
 
@@ -299,30 +455,20 @@ export class UserAccessComponent implements OnInit {
       return;
     }
 
-    selectedUsers.forEach(user => {
-      this.service.update(user.id, {
-        userCode: user.userCode,
-        name: user.name,
-        email: user.email,
-        costCenterCode: user.costCenterCode,
-        costCenterName: user.costCenterName,
-        enabled
-      }).subscribe();
+    this.service.updateUsersStatus(selectedUsers.map(user => user.recno), enabled).subscribe({
+      next: () => {
+        this.notification.success(`Usuarios ${statusLabel} com sucesso.`);
+        this.loadUsers();
+      },
+      error: () => {
+        this.notification.error(`Nao foi possivel atualizar os usuarios.`);
+      }
     });
-
-    this.notification.success(`Usuarios ${statusLabel} com sucesso.`);
-    this.loadUsers();
   }
 
   private handleEditAction(row: unknown): void {
     if (this.isUserRow(row)) {
       this.openEditModal(row);
-    }
-  }
-
-  private handleDeleteAction(row: unknown): void {
-    if (this.isUserRow(row)) {
-      this.confirmDelete(row);
     }
   }
 
@@ -340,6 +486,7 @@ export class UserAccessComponent implements OnInit {
     const user = row as Record<string, unknown>;
     return (
       typeof user['id'] === 'number' &&
+      typeof user['recno'] === 'number' &&
       typeof user['userCode'] === 'string' &&
       typeof user['name'] === 'string' &&
       typeof user['email'] === 'string' &&
@@ -356,7 +503,7 @@ export class UserAccessComponent implements OnInit {
 
     const firstUser = users[0] as unknown as Record<string, unknown>;
     return Object.keys(firstUser)
-      .filter(property => property !== 'id')
+      .filter(property => property !== 'id' && property !== 'recno')
       .map((property): PoTableColumn => {
       if (property === 'enabled') {
         return {

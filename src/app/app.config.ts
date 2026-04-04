@@ -6,12 +6,14 @@ import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } fr
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 import { PoHttpRequestModule } from '@po-ui/ng-components';
+import { ProtheusLibCoreModule } from '@totvs/protheus-lib-core';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(PoHttpRequestModule),
+    importProvidersFrom(ProtheusLibCoreModule),
     provideZoneChangeDetection({ eventCoalescing: true }),
   ],
 };
