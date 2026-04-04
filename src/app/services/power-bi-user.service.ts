@@ -5,6 +5,7 @@ import { PowerBiUser, PowerBiUserUpsert } from '../models/power-bi-user.model';
 import { LOCAL_AUTH_CONFIG } from '../config/local-auth.config';
 
 interface UserBiApiRow {
+  recno?: number;
   filial?: string;
   usuario?: string;
   nome?: string;
@@ -44,7 +45,7 @@ interface CostCenterSearchResponse {
 })
 export class PowerBiUserService {
   private readonly http = inject(HttpClient);
-  private readonly usersEndpoint = '/rest/userbi';
+  private readonly usersEndpoint = '/rest/UserBI';
   private readonly systemUsersSearchEndpoint = '/rest/UserBI/search';
   private readonly costCentersSearchEndpoint = '/rest/UserBI/cost-center/search';
   private readonly storageKey = 'power-bi-users';
@@ -61,14 +62,27 @@ export class PowerBiUserService {
   }
 
   public create(payload: PowerBiUserUpsert): Observable<PowerBiUser> {
-    const users = this.load();
-    const nextId = users.length > 0 ? Math.max(...users.map(item => item.id)) + 1 : 1;
-    const createdUser: PowerBiUser = { id: nextId, ...payload };
+    return this.http.post<UserBiApiResponse>(this.usersEndpoint, payload, {
+      headers: this.getBasicAuthHeaders()
+    }).pipe(
+      map(response => {
+        const row = response?.rows?.[0];
 
-    users.unshift(createdUser);
-    this.save(users);
+        if (row) {
+          return this.mapApiRowToUser(row, 0);
+        }
 
-    return of(createdUser);
+        return {
+          id: 0,
+          userCode: payload.userCode,
+          name: payload.name,
+          email: payload.email,
+          costCenterCode: payload.costCenterCode,
+          costCenterName: payload.costCenterName,
+          enabled: payload.enabled
+        } as PowerBiUser;
+      })
+    );
   }
 
   public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string }>> {
@@ -137,8 +151,11 @@ export class PowerBiUserService {
   }
 
   private mapApiRowToUser(row: UserBiApiRow, index: number): PowerBiUser {
+    const parsedRecno = Number(row.recno ?? 0);
+    const id = parsedRecno > 0 ? parsedRecno : index + 1;
+
     return {
-      id: index + 1,
+      id,
       userCode: row.usuario ?? '',
       name: row.nome ?? '',
       email: row.email ?? '',
@@ -159,4 +176,5 @@ export class PowerBiUserService {
       Authorization: `Basic ${credentials}`
     });
   }
+
 }
