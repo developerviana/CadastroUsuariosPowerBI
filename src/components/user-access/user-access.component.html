@@ -190,6 +190,24 @@
       >
       </po-input>
 
+      <div class="po-md-9" *ngIf="!editingUserId">
+        <section class="system-user-suggestions" *ngIf="isSearchingSystemUsers || systemUserSuggestions.length > 0">
+          <div class="system-user-suggestions__loading" *ngIf="isSearchingSystemUsers">
+            Buscando usuarios...
+          </div>
+
+          <button
+            type="button"
+            class="system-user-suggestions__item"
+            *ngFor="let suggestion of systemUserSuggestions"
+            (click)="selectSystemUserSuggestion(suggestion)"
+          >
+            <strong>{{ suggestion.nome }}</strong>
+            <span>{{ suggestion.usuario }}</span>
+          </button>
+        </section>
+      </div>
+
       <po-email
         class="po-md-6"
         p-label="E-mail"

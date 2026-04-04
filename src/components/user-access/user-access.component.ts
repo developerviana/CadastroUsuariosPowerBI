@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, of, switchMap } from 'rxjs';
 import {
   PoButtonModule,
   PoDialogModule,
@@ -45,11 +47,16 @@ export class UserAccessComponent implements OnInit {
   private readonly notification = inject(PoNotificationService);
   private readonly dialogService = inject(PoDialogService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   public users: PowerBiUser[] = [];
   public columns: PoTableColumn[] = [];
   public isLoading = true;
   public editingUserId: number | null = null;
+  public isSearchingSystemUsers = false;
+  public systemUserSuggestions: Array<{ usuario: string; nome: string }> = [];
+
+  private readonly minSystemUserSearchLength = 2;
 
   private readonly columnLabelMap: Record<string, string> = {
     id: 'Id',
@@ -93,6 +100,7 @@ export class UserAccessComponent implements OnInit {
 
   public ngOnInit(): void {
     this.loadUsers();
+    this.setupSystemUserSearch();
   }
 
   public get pageSubtitle(): string {
@@ -164,6 +172,7 @@ export class UserAccessComponent implements OnInit {
 
   public openCreateModal(): void {
     this.editingUserId = null;
+    this.systemUserSuggestions = [];
     this.userForm.reset({
       userCode: '',
       name: '',
@@ -177,6 +186,7 @@ export class UserAccessComponent implements OnInit {
 
   public openEditModal(row: PowerBiUser): void {
     this.editingUserId = row.id;
+    this.systemUserSuggestions = [];
     this.userForm.reset({
       userCode: row.userCode,
       name: row.name,
@@ -189,8 +199,17 @@ export class UserAccessComponent implements OnInit {
   }
 
   public closeModal(): void {
+    this.systemUserSuggestions = [];
     this.userModal.close();
     this.userForm.markAsPristine();
+  }
+
+  public selectSystemUserSuggestion(user: { usuario: string; nome: string }): void {
+    this.userForm.patchValue({
+      userCode: user.usuario,
+      name: user.nome
+    });
+    this.systemUserSuggestions = [];
   }
 
   public submitForm(): void {
@@ -290,6 +309,34 @@ export class UserAccessComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private setupSystemUserSearch(): void {
+    this.userForm.controls.name.valueChanges
+      .pipe(
+        map(value => value.trim()),
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap(term => {
+          if (this.editingUserId || term.length < this.minSystemUserSearchLength) {
+            this.systemUserSuggestions = [];
+            this.isSearchingSystemUsers = false;
+            return of([] as Array<{ usuario: string; nome: string }>);
+          }
+
+          this.isSearchingSystemUsers = true;
+          return this.service.searchSystemUsersByName(term).pipe(
+            catchError(() => of([] as Array<{ usuario: string; nome: string }>)),
+            finalize(() => {
+              this.isSearchingSystemUsers = false;
+            })
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(users => {
+        this.systemUserSuggestions = users;
+      });
   }
 
   private updateSelectedUsers(enabled: boolean, statusLabel: 'ativados' | 'inativados'): void {

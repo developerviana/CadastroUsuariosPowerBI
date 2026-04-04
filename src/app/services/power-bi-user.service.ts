@@ -19,12 +19,23 @@ interface UserBiApiResponse {
   rows?: UserBiApiRow[];
 }
 
+interface UserBiSearchRow {
+  usuario?: string;
+  nome?: string;
+}
+
+interface UserBiSearchResponse {
+  success?: boolean;
+  rows?: UserBiSearchRow[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class PowerBiUserService {
   private readonly http = inject(HttpClient);
   private readonly usersEndpoint = '/rest/userbi';
+  private readonly systemUsersSearchEndpoint = '/rest/UserBI/search';
   private readonly storageKey = 'power-bi-users';
 
   public getAll(): Observable<PowerBiUser[]> {
@@ -47,6 +58,21 @@ export class PowerBiUserService {
     this.save(users);
 
     return of(createdUser);
+  }
+
+  public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string }>> {
+    const cTerm = encodeURIComponent(term.trim());
+    return this.http.get<UserBiSearchResponse>(`${this.systemUsersSearchEndpoint}/${cTerm}`, {
+      headers: this.getBasicAuthHeaders()
+    }).pipe(
+      map(response => {
+        const rows = response?.rows ?? [];
+        return rows.map(row => ({
+          usuario: row.usuario ?? '',
+          nome: row.nome ?? ''
+        }));
+      })
+    );
   }
 
   public update(id: number, payload: PowerBiUserUpsert): Observable<PowerBiUser> {
