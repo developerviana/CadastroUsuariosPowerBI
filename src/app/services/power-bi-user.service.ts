@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map, of } from 'rxjs';
 import { PowerBiUser, PowerBiUserUpsert } from '../models/power-bi-user.model';
 import { LOCAL_AUTH_CONFIG } from '../config/local-auth.config';
+import { ProAppConfigService } from '@totvs/protheus-lib-core';
 
 interface UserBiApiRow {
   id?: number;
@@ -46,15 +47,14 @@ interface CostCenterSearchResponse {
 })
 export class PowerBiUserService {
   private readonly http = inject(HttpClient);
+  private readonly proAppConfigService = inject(ProAppConfigService);
   private readonly usersEndpoint = '/rest/UserBI';
   private readonly systemUsersSearchEndpoint = '/rest/UserBI/search';
   private readonly costCentersSearchEndpoint = '/rest/UserBI/cost-center/search';
   private readonly storageKey = 'power-bi-users';
 
   public getAll(): Observable<PowerBiUser[]> {
-    return this.http.get<UserBiApiResponse>(this.usersEndpoint, {
-      headers: this.getBasicAuthHeaders()
-    }).pipe(
+    return this.http.get<UserBiApiResponse>(this.usersEndpoint, this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map((row, index) => this.mapApiRowToUser(row, index));
@@ -63,9 +63,7 @@ export class PowerBiUserService {
   }
 
   public create(payload: PowerBiUserUpsert): Observable<PowerBiUser> {
-    return this.http.post<UserBiApiResponse>(this.usersEndpoint, payload, {
-      headers: this.getBasicAuthHeaders()
-    }).pipe(
+    return this.http.post<UserBiApiResponse>(this.usersEndpoint, payload, this.getRequestOptions()).pipe(
       map(response => {
         const row = response?.rows?.[0];
 
@@ -89,9 +87,7 @@ export class PowerBiUserService {
 
   public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string }>> {
     const cTerm = encodeURIComponent(term.trim());
-    return this.http.get<UserBiSearchResponse>(`${this.systemUsersSearchEndpoint}/${cTerm}`, {
-      headers: this.getBasicAuthHeaders()
-    }).pipe(
+    return this.http.get<UserBiSearchResponse>(`${this.systemUsersSearchEndpoint}/${cTerm}`, this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map(row => ({
@@ -104,9 +100,7 @@ export class PowerBiUserService {
 
   public searchCostCentersByTerm(term: string): Observable<Array<{ ccusto: string; ccnome: string }>> {
     const cTerm = encodeURIComponent(term.trim());
-    return this.http.get<CostCenterSearchResponse>(`${this.costCentersSearchEndpoint}/${cTerm}`, {
-      headers: this.getBasicAuthHeaders()
-    }).pipe(
+    return this.http.get<CostCenterSearchResponse>(`${this.costCentersSearchEndpoint}/${cTerm}`, this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map(row => ({
@@ -118,9 +112,7 @@ export class PowerBiUserService {
   }
 
   public update(recno: number, payload: PowerBiUserUpsert): Observable<PowerBiUser> {
-    return this.http.put<UserBiApiResponse>(`${this.usersEndpoint}/${recno}`, payload, {
-      headers: this.getBasicAuthHeaders()
-    }).pipe(
+    return this.http.put<UserBiApiResponse>(`${this.usersEndpoint}/${recno}`, payload, this.getRequestOptions()).pipe(
       map(response => {
         const row = response?.rows?.[0];
 
@@ -152,11 +144,17 @@ export class PowerBiUserService {
     return this.http.patch<UserBiApiResponse>(`${this.usersEndpoint}/status`, {
       recnos: recnos.join(','),
       enabled
-    }, {
-      headers: this.getBasicAuthHeaders()
-    }).pipe(
+    }, this.getRequestOptions()).pipe(
       map(() => void 0)
     );
+  }
+
+  private getRequestOptions(): { headers?: HttpHeaders } {
+    if (this.proAppConfigService.insideProtheus()) {
+      return {};
+    }
+
+    return { headers: this.getBasicAuthHeaders() };
   }
 
   private load(): PowerBiUser[] {
