@@ -29,6 +29,16 @@ interface UserBiSearchResponse {
   rows?: UserBiSearchRow[];
 }
 
+interface CostCenterSearchRow {
+  ccusto?: string;
+  ccnome?: string;
+}
+
+interface CostCenterSearchResponse {
+  success?: boolean;
+  rows?: CostCenterSearchRow[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -36,6 +46,7 @@ export class PowerBiUserService {
   private readonly http = inject(HttpClient);
   private readonly usersEndpoint = '/rest/userbi';
   private readonly systemUsersSearchEndpoint = '/rest/UserBI/search';
+  private readonly costCentersSearchEndpoint = '/rest/UserBI/cost-center/search';
   private readonly storageKey = 'power-bi-users';
 
   public getAll(): Observable<PowerBiUser[]> {
@@ -70,6 +81,21 @@ export class PowerBiUserService {
         return rows.map(row => ({
           usuario: row.usuario ?? '',
           nome: row.nome ?? ''
+        }));
+      })
+    );
+  }
+
+  public searchCostCentersByTerm(term: string): Observable<Array<{ ccusto: string; ccnome: string }>> {
+    const cTerm = encodeURIComponent(term.trim());
+    return this.http.get<CostCenterSearchResponse>(`${this.costCentersSearchEndpoint}/${cTerm}`, {
+      headers: this.getBasicAuthHeaders()
+    }).pipe(
+      map(response => {
+        const rows = response?.rows ?? [];
+        return rows.map(row => ({
+          ccusto: row.ccusto ?? '',
+          ccnome: row.ccnome ?? ''
         }));
       })
     );

@@ -172,6 +172,12 @@
     [p-secondary-action]="secondaryModalAction"
   >
     <form class="po-row" [formGroup]="userForm">
+      <section class="modal-alert po-md-12">
+        <strong>Orientações</strong>
+        <p>Se não encontrar pelo código, o sistema tentará pelo nome. Isso vale para Usuário e Centro de Custo.</p>
+        <p>O e-mail é obrigatório, pois a liberação do acesso é feita por e-mail.</p>
+      </section>
+
       <po-input
         class="po-md-3"
         p-label="Usuario"
@@ -206,15 +212,20 @@
             <span>{{ suggestion.usuario }}</span>
           </button>
         </section>
+        <small class="autocomplete-notice" *ngIf="userSearchNotice">
+          {{ userSearchNotice }}
+        </small>
       </div>
 
-      <po-email
-        class="po-md-6"
-        p-label="E-mail"
-        formControlName="email"
-        p-required="true"
-      >
-      </po-email>
+      <div class="po-md-6 email-field-wrapper">
+        <po-email
+          p-label="E-mail"
+          formControlName="email"
+          p-required="true"
+        >
+        </po-email>
+        <small class="field-helper">E-mail obrigatório para liberar o acesso por e-mail.</small>
+      </div>
 
       <po-input
         class="po-md-3"
@@ -233,6 +244,27 @@
         [p-maxlength]="120"
       >
       </po-input>
+
+      <div class="po-md-9" *ngIf="!editingUserId">
+        <section class="system-user-suggestions" *ngIf="isSearchingCostCenters || costCenterSuggestions.length > 0">
+          <div class="system-user-suggestions__loading" *ngIf="isSearchingCostCenters">
+            Buscando centros de custo...
+          </div>
+
+          <button
+            type="button"
+            class="system-user-suggestions__item"
+            *ngFor="let suggestion of costCenterSuggestions"
+            (click)="selectCostCenterSuggestion(suggestion)"
+          >
+            <strong>{{ suggestion.ccnome }}</strong>
+            <span>{{ suggestion.ccusto }}</span>
+          </button>
+        </section>
+        <small class="autocomplete-notice" *ngIf="costCenterSearchNotice">
+          {{ costCenterSearchNotice }}
+        </small>
+      </div>
 
       <po-switch
         class="po-md-4"

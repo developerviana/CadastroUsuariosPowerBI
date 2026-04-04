@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, debounceTime, distinctUntilChanged, finalize, map, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, merge, of, switchMap } from 'rxjs';
 import {
   PoButtonModule,
   PoDialogModule,
@@ -55,8 +55,12 @@ export class UserAccessComponent implements OnInit {
   public editingUserId: number | null = null;
   public isSearchingSystemUsers = false;
   public systemUserSuggestions: Array<{ usuario: string; nome: string }> = [];
+  public userSearchNotice = '';
+  public isSearchingCostCenters = false;
+  public costCenterSuggestions: Array<{ ccusto: string; ccnome: string }> = [];
+  public costCenterSearchNotice = '';
 
-  private readonly minSystemUserSearchLength = 2;
+  private readonly minAutocompleteSearchLength = 2;
 
   private readonly columnLabelMap: Record<string, string> = {
     id: 'Id',
@@ -101,6 +105,7 @@ export class UserAccessComponent implements OnInit {
   public ngOnInit(): void {
     this.loadUsers();
     this.setupSystemUserSearch();
+    this.setupCostCenterSearch();
   }
 
   public get pageSubtitle(): string {
@@ -173,6 +178,9 @@ export class UserAccessComponent implements OnInit {
   public openCreateModal(): void {
     this.editingUserId = null;
     this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
+    this.userSearchNotice = '';
+    this.costCenterSearchNotice = '';
     this.userForm.reset({
       userCode: '',
       name: '',
@@ -187,6 +195,9 @@ export class UserAccessComponent implements OnInit {
   public openEditModal(row: PowerBiUser): void {
     this.editingUserId = row.id;
     this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
+    this.userSearchNotice = '';
+    this.costCenterSearchNotice = '';
     this.userForm.reset({
       userCode: row.userCode,
       name: row.name,
@@ -200,6 +211,9 @@ export class UserAccessComponent implements OnInit {
 
   public closeModal(): void {
     this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
+    this.userSearchNotice = '';
+    this.costCenterSearchNotice = '';
     this.userModal.close();
     this.userForm.markAsPristine();
   }
@@ -208,8 +222,16 @@ export class UserAccessComponent implements OnInit {
     this.userForm.patchValue({
       userCode: user.usuario,
       name: user.nome
-    });
+    }, { emitEvent: false });
     this.systemUserSuggestions = [];
+  }
+
+  public selectCostCenterSuggestion(costCenter: { ccusto: string; ccnome: string }): void {
+    this.userForm.patchValue({
+      costCenterCode: costCenter.ccusto,
+      costCenterName: costCenter.ccnome
+    }, { emitEvent: false });
+    this.costCenterSuggestions = [];
   }
 
   public submitForm(): void {
@@ -312,31 +334,163 @@ export class UserAccessComponent implements OnInit {
   }
 
   private setupSystemUserSearch(): void {
-    this.userForm.controls.name.valueChanges
+    merge(
+      this.userForm.controls.userCode.valueChanges,
+      this.userForm.controls.name.valueChanges
+    )
       .pipe(
-        map(value => value.trim()),
+        map(() => ({
+          codeTerm: this.userForm.controls.userCode.value.trim(),
+          nameTerm: this.userForm.controls.name.value.trim()
+        })),
         debounceTime(300),
-        distinctUntilChanged(),
-        switchMap(term => {
-          if (this.editingUserId || term.length < this.minSystemUserSearchLength) {
+        distinctUntilChanged((previous, current) => {
+          return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
+        }),
+        switchMap(({ codeTerm, nameTerm }) => {
+          if (this.editingUserId) {
             this.systemUserSuggestions = [];
             this.isSearchingSystemUsers = false;
             return of([] as Array<{ usuario: string; nome: string }>);
           }
 
-          this.isSearchingSystemUsers = true;
-          return this.service.searchSystemUsersByName(term).pipe(
-            catchError(() => of([] as Array<{ usuario: string; nome: string }>)),
-            finalize(() => {
-              this.isSearchingSystemUsers = false;
-            })
-          );
+          return this.searchSystemUsersWithFallback(codeTerm, nameTerm);
         }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(users => {
         this.systemUserSuggestions = users;
       });
+  }
+
+  private setupCostCenterSearch(): void {
+    merge(
+      this.userForm.controls.costCenterCode.valueChanges,
+      this.userForm.controls.costCenterName.valueChanges
+    )
+      .pipe(
+        map(() => ({
+          codeTerm: this.userForm.controls.costCenterCode.value.trim(),
+          nameTerm: this.userForm.controls.costCenterName.value.trim()
+        })),
+        debounceTime(300),
+        distinctUntilChanged((previous, current) => {
+          return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
+        }),
+        switchMap(({ codeTerm, nameTerm }) => {
+          if (this.editingUserId) {
+            this.costCenterSuggestions = [];
+            this.isSearchingCostCenters = false;
+            return of([] as Array<{ ccusto: string; ccnome: string }>);
+          }
+
+          return this.searchCostCentersWithFallback(codeTerm, nameTerm);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(costCenters => {
+        this.costCenterSuggestions = costCenters;
+      });
+  }
+
+  private searchSystemUsersWithFallback(
+    codeTerm: string,
+    nameTerm: string
+  ) {
+    const normalizedCode = codeTerm.trim();
+    const normalizedName = nameTerm.trim();
+
+    if (normalizedCode.length >= this.minAutocompleteSearchLength) {
+      this.isSearchingSystemUsers = true;
+      return this.service.searchSystemUsersByName(normalizedCode).pipe(
+        switchMap(results => {
+          if (results.length > 0) {
+            this.userSearchNotice = '';
+            return of(results);
+          }
+
+          if (normalizedName.length >= this.minAutocompleteSearchLength && normalizedName !== normalizedCode) {
+            this.userSearchNotice = 'Nao encontramos pelo codigo. Tentando pelo nome.';
+            return this.service.searchSystemUsersByName(normalizedName);
+          }
+
+          this.userSearchNotice = 'Nao encontramos pelo codigo. Tente pesquisar pelo nome.';
+          return of([] as Array<{ usuario: string; nome: string }>);
+        }),
+        catchError(() => {
+          this.userSearchNotice = '';
+          return of([] as Array<{ usuario: string; nome: string }>);
+        }),
+        finalize(() => {
+          this.isSearchingSystemUsers = false;
+        })
+      );
+    }
+
+    if (normalizedName.length >= this.minAutocompleteSearchLength) {
+      this.userSearchNotice = '';
+      this.isSearchingSystemUsers = true;
+      return this.service.searchSystemUsersByName(normalizedName).pipe(
+        catchError(() => of([] as Array<{ usuario: string; nome: string }>)),
+        finalize(() => {
+          this.isSearchingSystemUsers = false;
+        })
+      );
+    }
+
+    this.userSearchNotice = '';
+    this.isSearchingSystemUsers = false;
+    return of([] as Array<{ usuario: string; nome: string }>);
+  }
+
+  private searchCostCentersWithFallback(
+    codeTerm: string,
+    nameTerm: string
+  ) {
+    const normalizedCode = codeTerm.trim();
+    const normalizedName = nameTerm.trim();
+
+    if (normalizedCode.length >= this.minAutocompleteSearchLength) {
+      this.isSearchingCostCenters = true;
+      return this.service.searchCostCentersByTerm(normalizedCode).pipe(
+        switchMap(results => {
+          if (results.length > 0) {
+            this.costCenterSearchNotice = '';
+            return of(results);
+          }
+
+          if (normalizedName.length >= this.minAutocompleteSearchLength && normalizedName !== normalizedCode) {
+            this.costCenterSearchNotice = 'Nao encontramos pelo codigo. Tentando pelo nome.';
+            return this.service.searchCostCentersByTerm(normalizedName);
+          }
+
+          this.costCenterSearchNotice = 'Nao encontramos pelo codigo. Tente pesquisar pelo nome.';
+          return of([] as Array<{ ccusto: string; ccnome: string }>);
+        }),
+        catchError(() => {
+          this.costCenterSearchNotice = '';
+          return of([] as Array<{ ccusto: string; ccnome: string }>);
+        }),
+        finalize(() => {
+          this.isSearchingCostCenters = false;
+        })
+      );
+    }
+
+    if (normalizedName.length >= this.minAutocompleteSearchLength) {
+      this.costCenterSearchNotice = '';
+      this.isSearchingCostCenters = true;
+      return this.service.searchCostCentersByTerm(normalizedName).pipe(
+        catchError(() => of([] as Array<{ ccusto: string; ccnome: string }>)),
+        finalize(() => {
+          this.isSearchingCostCenters = false;
+        })
+      );
+    }
+
+    this.costCenterSearchNotice = '';
+    this.isSearchingCostCenters = false;
+    return of([] as Array<{ ccusto: string; ccnome: string }>);
   }
 
   private updateSelectedUsers(enabled: boolean, statusLabel: 'ativados' | 'inativados'): void {

@@ -86,6 +86,10 @@
   overflow-y: auto;
 }
 
+.system-user-suggestions--compact {
+  margin-top: -0.15rem;
+}
+
 .system-user-suggestions__loading {
   color: #6e8294;
   font-size: 13px;
@@ -119,6 +123,20 @@
 .system-user-suggestions__item span {
   color: #6e8294;
   font-size: 12px;
+}
+
+.email-field-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-helper {
+  color: #6e8294;
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  margin-top: 0.35rem;
+  text-align: center;
 }
 
 @keyframes fade-in {
