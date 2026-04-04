@@ -24,7 +24,7 @@ interface UserBiApiResponse {
 })
 export class PowerBiUserService {
   private readonly http = inject(HttpClient);
-  private readonly usersEndpoint = 'http://localhost:8181/rest/userbi';
+  private readonly usersEndpoint = '/rest/userbi';
   private readonly storageKey = 'power-bi-users';
 
   private readonly seedData: PowerBiUser[] = [
