@@ -1,5 +1,6 @@
 export interface PowerBiUser {
   id: number;
+  recno: number;
   userCode: string;
   name: string;
   email: string;
@@ -8,4 +9,4 @@ export interface PowerBiUser {
   enabled: boolean;
 }
 
-export type PowerBiUserUpsert = Omit<PowerBiUser, 'id'>;
+export type PowerBiUserUpsert = Omit<PowerBiUser, 'id' | 'recno'>;

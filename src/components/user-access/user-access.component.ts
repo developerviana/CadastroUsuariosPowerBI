@@ -48,7 +48,7 @@ export class UserAccessComponent implements OnInit {
   public users: PowerBiUser[] = [];
   public columns: PoTableColumn[] = [];
   public isLoading = true;
-  public editingUserId: number | null = null;
+  public editingRecno: number | null = null;
   public isSearchingSystemUsers = false;
   public systemUserSuggestions: Array<{ usuario: string; nome: string }> = [];
   public userSearchNotice = '';
@@ -149,7 +149,7 @@ export class UserAccessComponent implements OnInit {
   }
 
   public get modalTitle(): string {
-    return this.editingUserId ? 'Editar usuario' : 'Novo usuario';
+    return this.editingRecno ? 'Editar usuario' : 'Novo usuario';
   }
 
   public get primaryModalAction(): PoModalAction {
@@ -166,7 +166,7 @@ export class UserAccessComponent implements OnInit {
   };
 
   public openCreateModal(): void {
-    this.editingUserId = null;
+    this.editingRecno = null;
     this.systemUserSuggestions = [];
     this.costCenterSuggestions = [];
     this.userSearchNotice = '';
@@ -183,7 +183,7 @@ export class UserAccessComponent implements OnInit {
   }
 
   public openEditModal(row: PowerBiUser): void {
-    this.editingUserId = row.id;
+    this.editingRecno = row.recno;
     this.systemUserSuggestions = [];
     this.costCenterSuggestions = [];
     this.userSearchNotice = '';
@@ -233,8 +233,8 @@ export class UserAccessComponent implements OnInit {
 
     const payload = this.userForm.getRawValue() as PowerBiUserUpsert;
 
-    if (this.editingUserId) {
-      this.service.update(this.editingUserId, payload).subscribe(() => {
+    if (this.editingRecno) {
+      this.service.update(this.editingRecno, payload).subscribe(() => {
         this.notification.success('Usuario atualizado com sucesso.');
         this.closeModal();
         this.loadUsers();
@@ -299,7 +299,7 @@ export class UserAccessComponent implements OnInit {
           return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
         }),
         switchMap(({ codeTerm, nameTerm }) => {
-          if (this.editingUserId) {
+          if (this.editingRecno) {
             this.systemUserSuggestions = [];
             this.isSearchingSystemUsers = false;
             return of([] as Array<{ usuario: string; nome: string }>);
@@ -329,7 +329,7 @@ export class UserAccessComponent implements OnInit {
           return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
         }),
         switchMap(({ codeTerm, nameTerm }) => {
-          if (this.editingUserId) {
+          if (this.editingRecno) {
             this.costCenterSuggestions = [];
             this.isSearchingCostCenters = false;
             return of([] as Array<{ ccusto: string; ccnome: string }>);
@@ -451,19 +451,15 @@ export class UserAccessComponent implements OnInit {
       return;
     }
 
-    selectedUsers.forEach(user => {
-      this.service.update(user.id, {
-        userCode: user.userCode,
-        name: user.name,
-        email: user.email,
-        costCenterCode: user.costCenterCode,
-        costCenterName: user.costCenterName,
-        enabled
-      }).subscribe();
+    this.service.updateUsersStatus(selectedUsers.map(user => user.recno), enabled).subscribe({
+      next: () => {
+        this.notification.success(`Usuarios ${statusLabel} com sucesso.`);
+        this.loadUsers();
+      },
+      error: () => {
+        this.notification.error(`Nao foi possivel atualizar os usuarios.`);
+      }
     });
-
-    this.notification.success(`Usuarios ${statusLabel} com sucesso.`);
-    this.loadUsers();
   }
 
   private handleEditAction(row: unknown): void {
@@ -486,6 +482,7 @@ export class UserAccessComponent implements OnInit {
     const user = row as Record<string, unknown>;
     return (
       typeof user['id'] === 'number' &&
+      typeof user['recno'] === 'number' &&
       typeof user['userCode'] === 'string' &&
       typeof user['name'] === 'string' &&
       typeof user['email'] === 'string' &&
@@ -502,7 +499,7 @@ export class UserAccessComponent implements OnInit {
 
     const firstUser = users[0] as unknown as Record<string, unknown>;
     return Object.keys(firstUser)
-      .filter(property => property !== 'id')
+      .filter(property => property !== 'id' && property !== 'recno')
       .map((property): PoTableColumn => {
       if (property === 'enabled') {
         return {
