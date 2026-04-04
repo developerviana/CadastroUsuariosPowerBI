@@ -5,8 +5,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, debounceTime, distinctUntilChanged, finalize, map, merge, of, switchMap } from 'rxjs';
 import {
   PoButtonModule,
-  PoDialogModule,
-  PoDialogService,
   PoFieldModule,
   PoModalAction,
   PoModalComponent,
@@ -33,7 +31,6 @@ import { PowerBiUserService } from '../../app/services/power-bi-user.service';
     PoTableModule,
     PoButtonModule,
     PoModalModule,
-    PoDialogModule,
     PoFieldModule,
   ],
   templateUrl: './user-access.component.html',
@@ -45,7 +42,6 @@ export class UserAccessComponent implements OnInit {
 
   private readonly service = inject(PowerBiUserService);
   private readonly notification = inject(PoNotificationService);
-  private readonly dialogService = inject(PoDialogService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -77,12 +73,6 @@ export class UserAccessComponent implements OnInit {
       label: 'Editar',
       icon: 'po-icon-edit',
       action: (row: unknown) => this.handleEditAction(row)
-    },
-    {
-      label: 'Excluir',
-      icon: 'po-icon-delete',
-      type: 'danger',
-      action: (row: unknown) => this.handleDeleteAction(row)
     }
   ];
 
@@ -259,51 +249,12 @@ export class UserAccessComponent implements OnInit {
     });
   }
 
-  public confirmDelete(row: PowerBiUser): void {
-    this.dialogService.confirm({
-      title: 'Excluir usuario',
-      message: `Deseja realmente excluir o usuario ${row.name}?`,
-      confirm: () => {
-        this.service.delete(row.id).subscribe(() => {
-          this.notification.success('Usuario excluido com sucesso.');
-          this.loadUsers();
-        });
-      }
-    });
-  }
-
   public enableSelectedUsers(): void {
     this.updateSelectedUsers(true, 'ativados');
   }
 
   public disableSelectedUsers(): void {
     this.updateSelectedUsers(false, 'inativados');
-  }
-
-  public confirmDeleteSelectedUsers(): void {
-    const selectedUsers = this.getSelectedUsers();
-
-    if (selectedUsers.length === 0) {
-      return;
-    }
-
-    const message =
-      selectedUsers.length === 1
-        ? `Deseja realmente excluir o usuario ${selectedUsers[0].name}?`
-        : `Deseja realmente excluir os ${selectedUsers.length} usuarios selecionados?`;
-
-    this.dialogService.confirm({
-      title: 'Excluir usuarios selecionados',
-      message,
-      confirm: () => {
-        selectedUsers.forEach(user => {
-          this.service.delete(user.id).subscribe();
-        });
-
-        this.notification.success('Usuarios excluidos com sucesso.');
-        this.loadUsers();
-      }
-    });
   }
 
   public clearFilters(): void {
@@ -518,12 +469,6 @@ export class UserAccessComponent implements OnInit {
   private handleEditAction(row: unknown): void {
     if (this.isUserRow(row)) {
       this.openEditModal(row);
-    }
-  }
-
-  private handleDeleteAction(row: unknown): void {
-    if (this.isUserRow(row)) {
-      this.confirmDelete(row);
     }
   }
 
