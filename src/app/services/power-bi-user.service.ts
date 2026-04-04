@@ -27,81 +27,6 @@ export class PowerBiUserService {
   private readonly usersEndpoint = '/rest/userbi';
   private readonly storageKey = 'power-bi-users';
 
-  private readonly seedData: PowerBiUser[] = [
-    {
-      id: 1,
-      userCode: 'USR-001',
-      name: 'ANA EXEMPLO',
-      email: 'ana.exemplo@organizacao-ficticia.org',
-      costCenterCode: 'CC-1001',
-      costCenterName: 'CENTRO DE CUSTO A',
-      enabled: true
-    },
-    {
-      id: 2,
-      userCode: 'USR-002',
-      name: 'BRUNO DEMO',
-      email: 'bruno.demo@organizacao-ficticia.org',
-      costCenterCode: 'CC-2002',
-      costCenterName: 'CENTRO DE CUSTO B',
-      enabled: true
-    },
-    {
-      id: 3,
-      userCode: 'USR-003',
-      name: 'CARLA MODELO',
-      email: 'carla.modelo@organizacao-ficticia.org',
-      costCenterCode: 'CC-3003',
-      costCenterName: 'CENTRO DE CUSTO C',
-      enabled: true
-    },
-    {
-      id: 4,
-      userCode: 'USR-004',
-      name: 'DANIEL TESTE',
-      email: 'daniel.teste@organizacao-ficticia.org',
-      costCenterCode: 'CC-4004',
-      costCenterName: 'CENTRO DE CUSTO D',
-      enabled: true
-    },
-    {
-      id: 5,
-      userCode: 'USR-005',
-      name: 'ELISA QA',
-      email: 'elisa.qa@organizacao-ficticia.org',
-      costCenterCode: 'CC-5005',
-      costCenterName: 'CENTRO DE CUSTO E',
-      enabled: false
-    },
-    {
-      id: 6,
-      userCode: 'USR-006',
-      name: 'FABIO PILOTO',
-      email: 'fabio.piloto@organizacao-ficticia.org',
-      costCenterCode: 'CC-6006',
-      costCenterName: 'CENTRO DE CUSTO F',
-      enabled: true
-    },
-    {
-      id: 7,
-      userCode: 'USR-007',
-      name: 'GABRIELA SAMPLE',
-      email: 'gabriela.sample@organizacao-ficticia.org',
-      costCenterCode: 'CC-7007',
-      costCenterName: 'CENTRO DE CUSTO G',
-      enabled: true
-    },
-    {
-      id: 8,
-      userCode: 'USR-008',
-      name: 'HEITOR STAGING',
-      email: 'heitor.staging@organizacao-ficticia.org',
-      costCenterCode: 'CC-8008',
-      costCenterName: 'CENTRO DE CUSTO H',
-      enabled: true
-    }
-  ];
-
   public getAll(): Observable<PowerBiUser[]> {
     return this.http.get<UserBiApiResponse>(this.usersEndpoint, {
       headers: this.getBasicAuthHeaders()
@@ -149,8 +74,7 @@ export class PowerBiUserService {
     const fromStorage = localStorage.getItem(this.storageKey);
 
     if (!fromStorage) {
-      this.save(this.seedData);
-      return [...this.seedData];
+      return [];
     }
 
     return JSON.parse(fromStorage) as PowerBiUser[];
