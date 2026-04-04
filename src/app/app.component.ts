@@ -41,7 +41,7 @@ export class AppComponent implements OnInit {
       label: 'Sair da rotina',
       icon: 'po-icon-exit',
       shortLabel: 'Sair',
-      action: () => this.exitRoutine()
+      action: () => this.exitRoutine(true)
     }
   ];
 
@@ -105,9 +105,9 @@ export class AppComponent implements OnInit {
     });
   }
 
-  public exitRoutine(): void {
+  public exitRoutine(askBeforeClose = false): void {
     if (this.proAppConfigService.insideProtheus()) {
-      this.proAppConfigService.callAppClose();
+      this.proAppConfigService.callAppClose(askBeforeClose);
       return;
     }
 
