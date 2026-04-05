@@ -107,10 +107,6 @@ export class UserAccessComponent implements OnInit {
     this.setupCostCenterSelectionAutofill();
   }
 
-  public get pageSubtitle(): string {
-    return 'Gestão de usuarios habilitados para visualização do Power BI';
-  }
-
   public get enabledCount(): number {
     return this.users.filter(user => user.enabled).length;
   }

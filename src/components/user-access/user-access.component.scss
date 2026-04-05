@@ -1,19 +1,30 @@
 :host {
   display: block;
+  height: 100%;
   animation: fade-in 280ms ease-out;
+}
+
+:host ::ng-deep .po-page {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 140px);
 }
 
 :host ::ng-deep .po-page-content {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.3rem;
+  flex: 1;
   min-height: 0;
+  padding-bottom: 1rem;
+  width: 100%;
 }
 
 .dashboard-resume {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 0.45rem;
+  margin-bottom: 0.2rem !important;
 }
 
 .resume-item {
@@ -60,13 +71,28 @@
 }
 
 .table-viewport {
-  min-height: 260px;
+  flex: 1;
+  min-height: 0;
   max-height: calc(100vh - 330px);
-  overflow-y: auto;
+  padding-bottom: 1.5rem;
+  margin-bottom: 0.6rem;
+  overflow: auto;
+}
+
+:host ::ng-deep .table-viewport .po-table {
+  min-width: 980px;
+}
+
+:host ::ng-deep .table-viewport .po-table-container {
+  min-height: 360px;
 }
 
 .filters-panel {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
+}
+
+.bulk-actions {
+  margin-bottom: 0.2rem !important;
 }
 
 :host ::ng-deep .po-page-header-title {
@@ -106,35 +132,6 @@
   padding: 0.65rem 0.85rem;
 }
 
-.system-user-suggestions__item {
-  background: #ffffff;
-  border: 0;
-  border-bottom: 1px solid rgba(176, 194, 208, 0.3);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  padding: 0.65rem 0.85rem;
-  text-align: left;
-}
-
-.system-user-suggestions__item:last-child {
-  border-bottom: 0;
-}
-
-.system-user-suggestions__item:hover {
-  background: #f3f8fc;
-}
-
-.system-user-suggestions__item strong {
-  color: #12324e;
-  font-size: 14px;
-}
-
-.system-user-suggestions__item span {
-  color: #6e8294;
-  font-size: 12px;
-}
-
 .email-field-wrapper {
   display: flex;
   flex-direction: column;
@@ -162,8 +159,22 @@
 }
 
 @media (max-width: 1024px) {
+  :host ::ng-deep .po-page {
+    min-height: calc(100vh - 120px);
+  }
+
+  :host ::ng-deep .po-page-content {
+    width: 100%;
+  }
+
   .table-viewport {
-    max-height: calc(100vh - 280px);
+    max-height: calc(100vh - 300px);
+    padding-bottom: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  :host ::ng-deep .table-viewport .po-table {
+    min-width: 820px;
   }
 }
 
