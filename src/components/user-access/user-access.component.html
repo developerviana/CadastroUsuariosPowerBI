@@ -181,26 +181,14 @@
       </section>
 
       <po-select
-        *ngIf="!editingRecno; else userCodeEditField"
         class="po-md-3"
         p-label="Usuario"
         formControlName="userCode"
         p-required="true"
         [p-options]="systemUsersSelectOptions"
-        [p-disabled]="isSearchingSystemUsers"
+        [p-disabled]="isSearchingSystemUsers ? 'true' : 'false'"
       >
       </po-select>
-
-      <ng-template #userCodeEditField>
-        <po-input
-          class="po-md-3"
-          p-label="Usuario"
-          formControlName="userCode"
-          p-required="true"
-          [p-maxlength]="20"
-        >
-        </po-input>
-      </ng-template>
 
       <po-input
         class="po-md-9"
@@ -211,7 +199,7 @@
       >
       </po-input>
 
-      <div class="po-md-9" *ngIf="!editingRecno">
+      <div class="po-md-9">
         <section class="system-user-suggestions" *ngIf="isSearchingSystemUsers">
           <div class="system-user-suggestions__loading">
             Carregando usuarios para selecao...
@@ -233,26 +221,14 @@
       </div>
 
       <po-select
-        *ngIf="!editingRecno; else costCenterCodeEditField"
         class="po-md-3"
         p-label="C.Custo"
         formControlName="costCenterCode"
         p-required="true"
         [p-options]="costCentersSelectOptions"
-        [p-disabled]="isSearchingCostCenters"
+        [p-disabled]="isSearchingCostCenters ? 'true' : 'false'"
       >
       </po-select>
-
-      <ng-template #costCenterCodeEditField>
-        <po-input
-          class="po-md-3"
-          p-label="C.Custo"
-          formControlName="costCenterCode"
-          p-required="true"
-          [p-maxlength]="20"
-        >
-        </po-input>
-      </ng-template>
 
       <po-input
         class="po-md-9"
@@ -263,7 +239,7 @@
       >
       </po-input>
 
-      <div class="po-md-9" *ngIf="!editingRecno">
+      <div class="po-md-9">
         <section class="system-user-suggestions" *ngIf="isSearchingCostCenters">
           <div class="system-user-suggestions__loading">
             Carregando centros de custo para selecao...

@@ -87,9 +87,8 @@ export class PowerBiUserService {
     );
   }
 
-  public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string; email: string }>> {
-    const cTerm = encodeURIComponent(term.trim());
-    return this.http.get<UserBiSearchResponse>(`${this.resolveApiUrl(this.systemUsersSearchPath)}/${cTerm}`, this.getRequestOptions()).pipe(
+  public getSystemUsersList(): Observable<Array<{ usuario: string; nome: string; email: string }>> {
+    return this.http.get<UserBiSearchResponse>(this.resolveApiUrl(this.systemUsersSearchPath), this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map(row => ({
@@ -101,9 +100,8 @@ export class PowerBiUserService {
     );
   }
 
-  public searchCostCentersByTerm(term: string): Observable<Array<{ ccusto: string; ccnome: string }>> {
-    const cTerm = encodeURIComponent(term.trim());
-    return this.http.get<CostCenterSearchResponse>(`${this.resolveApiUrl(this.costCentersSearchPath)}/${cTerm}`, this.getRequestOptions()).pipe(
+  public getCostCentersList(): Observable<Array<{ ccusto: string; ccnome: string }>> {
+    return this.http.get<CostCenterSearchResponse>(this.resolveApiUrl(this.costCentersSearchPath), this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map(row => ({

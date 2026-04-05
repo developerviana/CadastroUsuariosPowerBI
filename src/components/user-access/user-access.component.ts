@@ -191,6 +191,8 @@ export class UserAccessComponent implements OnInit {
       enabled: row.enabled
     });
     this.releaseEditModeFieldLocks();
+    this.loadSystemUsersForSelect();
+    this.loadCostCentersForSelect();
     this.userModal.open();
   }
 
@@ -203,14 +205,6 @@ export class UserAccessComponent implements OnInit {
     this.costCenterSearchNotice = '';
     this.userModal.close();
     this.userForm.markAsPristine();
-  }
-
-  public selectSystemUserSuggestion(user: { usuario: string; nome: string; email?: string }): void {
-    this.userForm.patchValue({
-      userCode: user.usuario,
-      name: user.nome,
-      email: user.email ?? ''
-    }, { emitEvent: false });
   }
 
   public submitForm(): void {
@@ -316,7 +310,7 @@ export class UserAccessComponent implements OnInit {
     this.isSearchingSystemUsers = true;
     this.userSearchNotice = '';
 
-    this.service.searchSystemUsersByName('')
+    this.service.getSystemUsersList()
       .pipe(
         catchError(() => {
           this.userSearchNotice = 'Nao foi possivel carregar a lista de usuarios.';
@@ -347,9 +341,9 @@ export class UserAccessComponent implements OnInit {
   }
 
   private releaseEditModeFieldLocks(): void {
-    this.userForm.controls.name.enable({ emitEvent: false });
     this.userForm.controls.email.enable({ emitEvent: false });
-    this.userForm.controls.costCenterName.enable({ emitEvent: false });
+    this.userForm.controls.name.disable({ emitEvent: false });
+    this.userForm.controls.costCenterName.disable({ emitEvent: false });
   }
 
   private setupCostCenterSelectionAutofill(): void {
@@ -379,7 +373,7 @@ export class UserAccessComponent implements OnInit {
     this.isSearchingCostCenters = true;
     this.costCenterSearchNotice = '';
 
-    this.service.searchCostCentersByTerm('')
+    this.service.getCostCentersList()
       .pipe(
         catchError(() => {
           this.costCenterSearchNotice = 'Nao foi possivel carregar a lista de centros de custo.';
