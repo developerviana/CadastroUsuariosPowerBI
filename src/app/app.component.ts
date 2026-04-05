@@ -18,6 +18,9 @@ export class AppComponent implements AfterViewInit {
   private readonly proThreadInfoService = inject(ProThreadInfoService);
   private readonly proSessionInfoService = inject(ProSessionInfoService);
 
+  public readonly menuLogo = 'assets/LOGOTIPO-ALTA-RESOLUCAO-500x235.png';
+  public readonly menuLogoAlt = 'Instituto Clima e Sociedade';
+
   public sessionContext = {
     company: '-',
     branch: '-',

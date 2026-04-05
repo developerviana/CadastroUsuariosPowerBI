@@ -30,6 +30,11 @@
                 "glob": "**/*",
                 "input": "public",
                 "output": "/"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
               }
             ],
             "styles": [
@@ -100,7 +105,11 @@
                 "glob": "**/*",
                 "input": "public"
               },
-              "src/assets"        
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
+              },
             ],
             "styles": [
               "./node_modules/@po-ui/style/css/po-theme-default-variables.min.css",

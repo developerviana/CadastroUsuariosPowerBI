@@ -25,6 +25,7 @@ interface UserBiApiResponse {
 interface UserBiSearchRow {
   usuario?: string;
   nome?: string;
+  email?: string;
 }
 
 interface UserBiSearchResponse {
@@ -86,14 +87,15 @@ export class PowerBiUserService {
     );
   }
 
-  public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string }>> {
+  public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string; email: string }>> {
     const cTerm = encodeURIComponent(term.trim());
     return this.http.get<UserBiSearchResponse>(`${this.resolveApiUrl(this.systemUsersSearchPath)}/${cTerm}`, this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map(row => ({
           usuario: row.usuario ?? '',
-          nome: row.nome ?? ''
+          nome: row.nome ?? '',
+          email: row.email ?? ''
         }));
       })
     );

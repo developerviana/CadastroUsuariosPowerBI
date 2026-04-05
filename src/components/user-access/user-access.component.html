@@ -180,14 +180,27 @@
         <p>O e-mail é obrigatório, pois a liberação do acesso é feita por e-mail.</p>
       </section>
 
-      <po-input
+      <po-select
+        *ngIf="!editingRecno; else userCodeEditField"
         class="po-md-3"
         p-label="Usuario"
         formControlName="userCode"
         p-required="true"
-        [p-maxlength]="20"
+        [p-options]="systemUsersSelectOptions"
+        [p-disabled]="isSearchingSystemUsers"
       >
-      </po-input>
+      </po-select>
+
+      <ng-template #userCodeEditField>
+        <po-input
+          class="po-md-3"
+          p-label="Usuario"
+          formControlName="userCode"
+          p-required="true"
+          [p-maxlength]="20"
+        >
+        </po-input>
+      </ng-template>
 
       <po-input
         class="po-md-9"
@@ -199,20 +212,10 @@
       </po-input>
 
       <div class="po-md-9" *ngIf="!editingRecno">
-        <section class="system-user-suggestions" *ngIf="isSearchingSystemUsers || systemUserSuggestions.length > 0">
-          <div class="system-user-suggestions__loading" *ngIf="isSearchingSystemUsers">
-            Buscando usuarios...
+        <section class="system-user-suggestions" *ngIf="isSearchingSystemUsers">
+          <div class="system-user-suggestions__loading">
+            Carregando usuarios para selecao...
           </div>
-
-          <button
-            type="button"
-            class="system-user-suggestions__item"
-            *ngFor="let suggestion of systemUserSuggestions"
-            (click)="selectSystemUserSuggestion(suggestion)"
-          >
-            <strong>{{ suggestion.nome }}</strong>
-            <span>{{ suggestion.usuario }}</span>
-          </button>
         </section>
         <small class="autocomplete-notice" *ngIf="userSearchNotice">
           {{ userSearchNotice }}
@@ -229,14 +232,27 @@
         <small class="field-helper">E-mail obrigatório para liberar o acesso por e-mail.</small>
       </div>
 
-      <po-input
+      <po-select
+        *ngIf="!editingRecno; else costCenterCodeEditField"
         class="po-md-3"
         p-label="C.Custo"
         formControlName="costCenterCode"
         p-required="true"
-        [p-maxlength]="20"
+        [p-options]="costCentersSelectOptions"
+        [p-disabled]="isSearchingCostCenters"
       >
-      </po-input>
+      </po-select>
+
+      <ng-template #costCenterCodeEditField>
+        <po-input
+          class="po-md-3"
+          p-label="C.Custo"
+          formControlName="costCenterCode"
+          p-required="true"
+          [p-maxlength]="20"
+        >
+        </po-input>
+      </ng-template>
 
       <po-input
         class="po-md-9"
@@ -248,20 +264,10 @@
       </po-input>
 
       <div class="po-md-9" *ngIf="!editingRecno">
-        <section class="system-user-suggestions" *ngIf="isSearchingCostCenters || costCenterSuggestions.length > 0">
-          <div class="system-user-suggestions__loading" *ngIf="isSearchingCostCenters">
-            Buscando centros de custo...
+        <section class="system-user-suggestions" *ngIf="isSearchingCostCenters">
+          <div class="system-user-suggestions__loading">
+            Carregando centros de custo para selecao...
           </div>
-
-          <button
-            type="button"
-            class="system-user-suggestions__item"
-            *ngFor="let suggestion of costCenterSuggestions"
-            (click)="selectCostCenterSuggestion(suggestion)"
-          >
-            <strong>{{ suggestion.ccnome }}</strong>
-            <span>{{ suggestion.ccusto }}</span>
-          </button>
         </section>
         <small class="autocomplete-notice" *ngIf="costCenterSearchNotice">
           {{ costCenterSearchNotice }}

@@ -19,6 +19,11 @@
 	background: rgba(255, 255, 255, 0.72);
 }
 
+:host ::ng-deep .po-menu .po-menu-header-container-logo a {
+	pointer-events: none;
+	cursor: default;
+}
+
 :host ::ng-deep .po-menu .po-menu-item-selected {
 	background: rgba(255, 255, 255, 0.88);
 }
