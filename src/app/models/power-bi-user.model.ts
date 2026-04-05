@@ -1,6 +1,7 @@
 export interface PowerBiUser {
   id: number;
   recno: number;
+  filial: string;
   userCode: string;
   name: string;
   email: string;

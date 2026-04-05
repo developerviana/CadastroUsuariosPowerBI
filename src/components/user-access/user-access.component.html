@@ -1,4 +1,4 @@
-<po-page-default p-title="Cadastro de Usuarios Power BI" [p-subtitle]="pageSubtitle">
+<po-page-default p-title="Cadastro de Usuarios Power BI">
   <section class="dashboard-resume po-mb-3">
     <div class="resume-item">
       <span class="resume-label">Total de usuarios</span>
@@ -180,14 +180,15 @@
         <p>O e-mail é obrigatório, pois a liberação do acesso é feita por e-mail.</p>
       </section>
 
-      <po-input
+      <po-select
         class="po-md-3"
         p-label="Usuario"
         formControlName="userCode"
         p-required="true"
-        [p-maxlength]="20"
+        [p-options]="systemUsersSelectOptions"
+        [p-disabled]="isSearchingSystemUsers ? 'true' : 'false'"
       >
-      </po-input>
+      </po-select>
 
       <po-input
         class="po-md-9"
@@ -198,21 +199,11 @@
       >
       </po-input>
 
-      <div class="po-md-9" *ngIf="!editingRecno">
-        <section class="system-user-suggestions" *ngIf="isSearchingSystemUsers || systemUserSuggestions.length > 0">
-          <div class="system-user-suggestions__loading" *ngIf="isSearchingSystemUsers">
-            Buscando usuarios...
+      <div class="po-md-9">
+        <section class="system-user-suggestions" *ngIf="isSearchingSystemUsers">
+          <div class="system-user-suggestions__loading">
+            Carregando usuarios para selecao...
           </div>
-
-          <button
-            type="button"
-            class="system-user-suggestions__item"
-            *ngFor="let suggestion of systemUserSuggestions"
-            (click)="selectSystemUserSuggestion(suggestion)"
-          >
-            <strong>{{ suggestion.nome }}</strong>
-            <span>{{ suggestion.usuario }}</span>
-          </button>
         </section>
         <small class="autocomplete-notice" *ngIf="userSearchNotice">
           {{ userSearchNotice }}
@@ -226,17 +217,18 @@
           p-required="true"
         >
         </po-email>
-        <small class="field-helper">E-mail obrigatório para liberar o acesso por e-mail.</small>
+        <small class="field-helper">E-mail obrigatório para acesso ao relatório.</small>
       </div>
 
-      <po-input
+      <po-select
         class="po-md-3"
         p-label="C.Custo"
         formControlName="costCenterCode"
         p-required="true"
-        [p-maxlength]="20"
+        [p-options]="costCentersSelectOptions"
+        [p-disabled]="isSearchingCostCenters ? 'true' : 'false'"
       >
-      </po-input>
+      </po-select>
 
       <po-input
         class="po-md-9"
@@ -247,21 +239,11 @@
       >
       </po-input>
 
-      <div class="po-md-9" *ngIf="!editingRecno">
-        <section class="system-user-suggestions" *ngIf="isSearchingCostCenters || costCenterSuggestions.length > 0">
-          <div class="system-user-suggestions__loading" *ngIf="isSearchingCostCenters">
-            Buscando centros de custo...
+      <div class="po-md-9">
+        <section class="system-user-suggestions" *ngIf="isSearchingCostCenters">
+          <div class="system-user-suggestions__loading">
+            Carregando centros de custo para selecao...
           </div>
-
-          <button
-            type="button"
-            class="system-user-suggestions__item"
-            *ngFor="let suggestion of costCenterSuggestions"
-            (click)="selectCostCenterSuggestion(suggestion)"
-          >
-            <strong>{{ suggestion.ccnome }}</strong>
-            <span>{{ suggestion.ccusto }}</span>
-          </button>
         </section>
         <small class="autocomplete-notice" *ngIf="costCenterSearchNotice">
           {{ costCenterSearchNotice }}

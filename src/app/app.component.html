@@ -1,5 +1,10 @@
 <div class="po-wrapper">
-  <po-menu [p-menus]="menuItems"></po-menu>
+  <po-menu
+    [p-menus]="menuItems"
+    [p-logo]="menuLogo"
+    [p-logo-alt]="menuLogoAlt"
+  >
+  </po-menu>
 
   <section class="session-context">
     <span><strong>Usuário:</strong> {{ userContext.name }}</span>
