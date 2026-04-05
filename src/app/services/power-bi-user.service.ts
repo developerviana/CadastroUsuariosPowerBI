@@ -74,6 +74,7 @@ export class PowerBiUserService {
         return {
           id: 0,
           recno: 0,
+          filial: '',
           userCode: payload.userCode,
           name: payload.name,
           email: payload.email,
@@ -123,6 +124,7 @@ export class PowerBiUserService {
         return {
           id: recno,
           recno,
+          filial: '',
           userCode: payload.userCode,
           name: payload.name,
           email: payload.email,
@@ -187,6 +189,7 @@ export class PowerBiUserService {
     return {
       id,
       recno,
+      filial: row.filial ?? '',
       userCode: row.usuario ?? '',
       name: row.nome ?? '',
       email: row.email ?? '',

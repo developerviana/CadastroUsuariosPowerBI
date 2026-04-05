@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, debounceTime, distinctUntilChanged, finalize, map, merge, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, merge, of, startWith, switchMap } from 'rxjs';
 import {
   PoButtonModule,
   PoFieldModule,
@@ -46,7 +46,24 @@ export class UserAccessComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   public users: PowerBiUser[] = [];
-  public columns: PoTableColumn[] = [];
+  public filteredUsers: PowerBiUser[] = [];
+  public readonly columns: PoTableColumn[] = [
+    { property: 'filial', label: 'Filial' },
+    { property: 'userCode', label: 'Usuario' },
+    { property: 'name', label: 'Nome' },
+    { property: 'email', label: 'E-mail' },
+    { property: 'costCenterCode', label: 'C.Custo' },
+    { property: 'costCenterName', label: 'Nome C.Custo' },
+    {
+      property: 'enabled',
+      label: 'Status',
+      type: 'label',
+      labels: [
+        { value: true as any, color: 'color-11', label: 'Ativo' },
+        { value: false as any, color: 'color-08', label: 'Inativo' }
+      ]
+    }
+  ];
   public isLoading = true;
   public editingRecno: number | null = null;
   public isSearchingSystemUsers = false;
@@ -57,16 +74,6 @@ export class UserAccessComponent implements OnInit {
   public costCenterSearchNotice = '';
 
   private readonly minAutocompleteSearchLength = 2;
-
-  private readonly columnLabelMap: Record<string, string> = {
-    id: 'Id',
-    userCode: 'Usuario',
-    name: 'Nome',
-    email: 'E-mail',
-    costCenterCode: 'C.Custo',
-    costCenterName: 'Nome C.Custo',
-    enabled: 'Status'
-  };
 
   public readonly tableActions: PoTableAction[] = [
     {
@@ -93,6 +100,7 @@ export class UserAccessComponent implements OnInit {
   public readonly rowTemplateArrowDirection = PoTableRowTemplateArrowDirection.Right;
 
   public ngOnInit(): void {
+    this.setupFilters();
     this.loadUsers();
     this.setupSystemUserSearch();
     this.setupCostCenterSearch();
@@ -104,24 +112,6 @@ export class UserAccessComponent implements OnInit {
 
   public get enabledCount(): number {
     return this.users.filter(user => user.enabled).length;
-  }
-
-  public get filteredUsers(): PowerBiUser[] {
-    const term = this.filtersForm.controls.term.value.trim().toLowerCase();
-    const onlyEnabled = this.filtersForm.controls.onlyEnabled.value;
-
-    return this.users.filter(user => {
-      const matchesTerm =
-        term.length === 0 ||
-        [user.userCode, user.name, user.email, user.costCenterCode, user.costCenterName]
-          .join(' ')
-          .toLowerCase()
-          .includes(term);
-
-      const matchesEnabled = !onlyEnabled || user.enabled;
-
-      return matchesTerm && matchesEnabled;
-    });
   }
 
   public get selectedUsersCount(): number {
@@ -278,7 +268,7 @@ export class UserAccessComponent implements OnInit {
     this.service.getAll().subscribe({
       next: users => {
         this.users = users;
-        this.columns = this.buildColumnsFromUsers(users);
+        this.syncFilteredUsers();
         this.isLoading = false;
       },
       error: () => {
@@ -286,6 +276,17 @@ export class UserAccessComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private setupFilters(): void {
+    this.filtersForm.valueChanges
+      .pipe(
+        startWith(this.filtersForm.getRawValue()),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.syncFilteredUsers();
+      });
   }
 
   private setupSystemUserSearch(): void {
@@ -496,44 +497,21 @@ export class UserAccessComponent implements OnInit {
     );
   }
 
-  private buildColumnsFromUsers(users: PowerBiUser[]): PoTableColumn[] {
-    if (users.length === 0) {
-      return [];
-    }
+  private syncFilteredUsers(): void {
+    const term = this.filtersForm.controls.term.value.trim().toLowerCase();
+    const onlyEnabled = this.filtersForm.controls.onlyEnabled.value;
 
-    const firstUser = users[0] as unknown as Record<string, unknown>;
-    return Object.keys(firstUser)
-      .filter(property => property !== 'id' && property !== 'recno')
-      .map((property): PoTableColumn => {
-      if (property === 'enabled') {
-        return {
-          property,
-          label: this.toColumnLabel(property),
-          type: 'label',
-          labels: [
-            { value: true as any, color: 'color-11', label: 'Ativo' },
-            { value: false as any, color: 'color-08', label: 'Inativo' }
-          ]
-        };
-      }
+    this.filteredUsers = this.users.filter(user => {
+      const matchesTerm =
+        term.length === 0 ||
+        [user.filial, user.userCode, user.name, user.email, user.costCenterCode, user.costCenterName]
+          .join(' ')
+          .toLowerCase()
+          .includes(term);
 
-      return {
-        property,
-        label: this.toColumnLabel(property)
-      };
-      });
-  }
+      const matchesEnabled = !onlyEnabled || user.enabled;
 
-  private toColumnLabel(property: string): string {
-    if (this.columnLabelMap[property]) {
-      return this.columnLabelMap[property];
-    }
-
-    const normalized = property
-      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-      .replace(/_/g, ' ')
-      .trim();
-
-    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+      return matchesTerm && matchesEnabled;
+    });
   }
 }

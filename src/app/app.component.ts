@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { AfterViewInit, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterOutlet } from '@angular/router';
 import { PoMenuItem, PoMenuModule, PoNotificationService } from '@po-ui/ng-components';
@@ -11,7 +11,7 @@ import { ProAppConfigService, ProSessionInfoService, ProThreadInfoService } from
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements AfterViewInit {
   private readonly router = inject(Router);
   private readonly notification = inject(PoNotificationService);
   private readonly proAppConfigService = inject(ProAppConfigService);
@@ -45,9 +45,11 @@ export class AppComponent implements OnInit {
     }
   ];
 
-  public ngOnInit(): void {
-    this.getUserThreadInfo();
-    this.loadSessionContext();
+  public ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.getUserThreadInfo();
+      this.loadSessionContext();
+    });
   }
 
   public loadSessionContext(): void {
