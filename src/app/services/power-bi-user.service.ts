@@ -75,7 +75,6 @@ export class PowerBiUserService {
         return {
           id: 0,
           recno: 0,
-          filial: '',
           userCode: payload.userCode,
           name: payload.name,
           email: payload.email,
@@ -87,8 +86,9 @@ export class PowerBiUserService {
     );
   }
 
-  public getSystemUsersList(): Observable<Array<{ usuario: string; nome: string; email: string }>> {
-    return this.http.get<UserBiSearchResponse>(this.resolveApiUrl(this.systemUsersSearchPath), this.getRequestOptions()).pipe(
+  public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string; email: string }>> {
+    const cTerm = encodeURIComponent(term.trim());
+    return this.http.get<UserBiSearchResponse>(`${this.resolveApiUrl(this.systemUsersSearchPath)}/${cTerm}`, this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map(row => ({
@@ -100,24 +100,9 @@ export class PowerBiUserService {
     );
   }
 
-  public searchSystemUsersByName(term: string): Observable<Array<{ usuario: string; nome: string }>> {
-    const normalizedTerm = encodeURIComponent(term.trim());
-
-    return this.http
-      .get<UserBiSearchResponse>(`${this.resolveApiUrl(this.systemUsersSearchPath)}/${normalizedTerm}`, this.getRequestOptions())
-      .pipe(
-        map(response => {
-          const rows = response?.rows ?? [];
-          return rows.map(row => ({
-            usuario: row.usuario ?? '',
-            nome: row.nome ?? ''
-          }));
-        })
-      );
-  }
-
-  public getCostCentersList(): Observable<Array<{ ccusto: string; ccnome: string }>> {
-    return this.http.get<CostCenterSearchResponse>(this.resolveApiUrl(this.costCentersSearchPath), this.getRequestOptions()).pipe(
+  public searchCostCentersByTerm(term: string): Observable<Array<{ ccusto: string; ccnome: string }>> {
+    const cTerm = encodeURIComponent(term.trim());
+    return this.http.get<CostCenterSearchResponse>(`${this.resolveApiUrl(this.costCentersSearchPath)}/${cTerm}`, this.getRequestOptions()).pipe(
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map(row => ({
@@ -126,22 +111,6 @@ export class PowerBiUserService {
         }));
       })
     );
-  }
-
-  public searchCostCentersByTerm(term: string): Observable<Array<{ ccusto: string; ccnome: string }>> {
-    const normalizedTerm = encodeURIComponent(term.trim());
-
-    return this.http
-      .get<CostCenterSearchResponse>(`${this.resolveApiUrl(this.costCentersSearchPath)}/${normalizedTerm}`, this.getRequestOptions())
-      .pipe(
-        map(response => {
-          const rows = response?.rows ?? [];
-          return rows.map(row => ({
-            ccusto: row.ccusto ?? '',
-            ccnome: row.ccnome ?? ''
-          }));
-        })
-      );
   }
 
   public update(recno: number, payload: PowerBiUserUpsert): Observable<PowerBiUser> {
@@ -156,7 +125,6 @@ export class PowerBiUserService {
         return {
           id: recno,
           recno,
-          filial: '',
           userCode: payload.userCode,
           name: payload.name,
           email: payload.email,

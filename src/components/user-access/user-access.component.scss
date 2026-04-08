@@ -1,30 +1,19 @@
 :host {
   display: block;
-  height: 100%;
   animation: fade-in 280ms ease-out;
-}
-
-:host ::ng-deep .po-page {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 140px);
 }
 
 :host ::ng-deep .po-page-content {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  flex: 1;
+  gap: 0.5rem;
   min-height: 0;
-  padding-bottom: 1rem;
-  width: 100%;
 }
 
 .dashboard-resume {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-  margin-bottom: 0.2rem !important;
+  gap: 0.6rem;
 }
 
 .resume-item {
@@ -32,6 +21,7 @@
   border: 1px solid rgba(176, 194, 208, 0.34);
   border-radius: 12px;
   box-shadow: 0 10px 24px rgba(31, 47, 61, 0.08);
+  cursor: pointer;
   padding: 0.75rem 0.95rem;
   transition: background-color 240ms ease, transform 240ms ease, box-shadow 240ms ease;
 }
@@ -47,12 +37,14 @@
   display: block;
   font-size: 14px;
   font-weight: 700;
+  letter-spacing: 0;
   line-height: 24px;
   text-transform: uppercase;
 }
 
 .resume-value {
   color: #12324e;
+  font-family: var(--app-font-family);
   font-weight: 700;
   font-size: 16px;
   line-height: 24px;
@@ -71,33 +63,26 @@
 }
 
 .table-viewport {
-  flex: 1;
-  min-height: 0;
+  min-height: 260px;
   max-height: calc(100vh - 330px);
-  padding-bottom: 1.5rem;
-  margin-bottom: 0.6rem;
-  overflow: auto;
-}
-
-:host ::ng-deep .table-viewport .po-table {
-  min-width: 980px;
-}
-
-:host ::ng-deep .table-viewport .po-table-container {
-  min-height: 360px;
+  overflow-y: auto;
 }
 
 .filters-panel {
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.25rem;
 }
 
-.bulk-actions {
-  margin-bottom: 0.2rem !important;
+:host ::ng-deep .po-page-header-title {
+  margin-bottom: 0.15rem;
+}
+
+:host ::ng-deep .po-page-header-subtitle {
+  margin-bottom: 0.3rem;
 }
 
 :host ::ng-deep .po-page-header-title {
   color: var(--brand-blue-700);
-  margin-bottom: 0.15rem;
+  font-family: var(--app-font-family);
   font-size: 34px;
   font-weight: 200;
   line-height: 48px;
@@ -105,8 +90,9 @@
 
 :host ::ng-deep .po-page-header-subtitle {
   color: #6e8294;
-  margin-bottom: 0.3rem;
+  font-family: var(--app-font-family);
   font-size: 16px;
+  font-weight: 400;
   line-height: 24px;
 }
 
@@ -114,27 +100,13 @@
   border-radius: 14px;
 }
 
-.system-user-suggestions {
-  background: #ffffff;
-  border: 1px solid rgba(176, 194, 208, 0.46);
-  border-radius: 10px;
-  box-shadow: 0 12px 24px rgba(31, 47, 61, 0.12);
-  display: flex;
-  flex-direction: column;
-  margin-top: -0.25rem;
-  max-height: 220px;
-  overflow-y: auto;
-}
-
-.system-user-suggestions__loading {
-  color: #6e8294;
-  font-size: 13px;
-  padding: 0.65rem 0.85rem;
-}
-
 .email-field-wrapper {
   display: flex;
   flex-direction: column;
+}
+
+.name-field-wrapper {
+  padding-left: 1.25rem;
 }
 
 .field-helper {
@@ -159,22 +131,12 @@
 }
 
 @media (max-width: 1024px) {
-  :host ::ng-deep .po-page {
-    min-height: calc(100vh - 120px);
-  }
-
-  :host ::ng-deep .po-page-content {
-    width: 100%;
-  }
-
   .table-viewport {
-    max-height: calc(100vh - 300px);
-    padding-bottom: 1rem;
-    margin-bottom: 0.5rem;
+    max-height: calc(100vh - 280px);
   }
 
-  :host ::ng-deep .table-viewport .po-table {
-    min-width: 820px;
+  .name-field-wrapper {
+    padding-left: 0;
   }
 }
 
