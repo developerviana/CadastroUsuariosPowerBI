@@ -178,6 +178,7 @@
         <strong>Orientações</strong>
         <p>Se não encontrar pelo código, o sistema tentará pelo nome. Isso vale para Usuário e Centro de Custo.</p>
         <p>O e-mail é obrigatório, pois a liberação do acesso é feita por e-mail.</p>
+        <p *ngIf="isEditModalLoading">Carregando dados da edição...</p>
       </section>
 
       <po-combo
@@ -187,6 +188,7 @@
         p-filter-placeholder="Digite para filtrar..."
         formControlName="userCode"
         [p-options]="systemUserOptions"
+        [p-disabled]="isEditModalLoading"
         (p-change)="onSystemUserChange($event)"
         (p-input-change)="onSystemUserInputChange($event)"
         (p-focus)="onSystemUserFocus()"
@@ -229,6 +231,7 @@
         p-filter-placeholder="Digite para filtrar..."
         formControlName="costCenterCode"
         [p-options]="costCenterOptions"
+        [p-disabled]="isEditModalLoading"
         (p-change)="onCostCenterChange($event)"
         (p-input-change)="onCostCenterInputChange($event)"
         (p-focus)="onCostCenterFocus()"

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, debounceTime, distinctUntilChanged, finalize, map, merge, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, map, merge, of, switchMap } from 'rxjs';
 import {
   PoButtonModule,
   PoFieldModule,
@@ -49,6 +49,7 @@ export class UserAccessComponent implements OnInit {
   public columns: PoTableColumn[] = [];
   public isLoading = true;
   public editingRecno: number | null = null;
+  public isEditModalLoading = false;
   public systemUserOptions: Array<{ label: string; value: string; nome: string; email: string }> = [];
   public systemUserResults: Array<{ usuario: string; nome: string; email: string }> = [];
   public costCenterOptions: Array<{ label: string; value: string; ccnome: string }> = [];
@@ -156,7 +157,7 @@ export class UserAccessComponent implements OnInit {
     return {
       label: 'Salvar',
       action: () => this.submitForm(),
-      disabled: this.userForm.invalid
+      disabled: this.userForm.invalid || this.isEditModalLoading
     };
   }
 
@@ -185,25 +186,71 @@ export class UserAccessComponent implements OnInit {
   }
 
   public openEditModal(row: PowerBiUser): void {
+    this.isEditModalLoading = true;
     this.editingRecno = row.recno;
+    this.selectedSystemUserCode = row.userCode;
+    this.selectedCostCenterCode = row.costCenterCode;
     this.systemUserOptions = [];
     this.systemUserResults = [];
     this.costCenterOptions = [];
     this.costCenterResults = [];
-    this.selectedSystemUserCode = row.userCode;
-    this.selectedCostCenterCode = row.costCenterCode;
-    this.userForm.reset({
-      userCode: row.userCode,
-      name: row.name,
-      email: row.email,
-      costCenterCode: row.costCenterCode,
-      costCenterName: row.costCenterName,
-      enabled: row.enabled
-    });
+
+    this.userForm.reset(
+      {
+        userCode: '',
+        name: row.name,
+        email: row.email,
+        costCenterCode: '',
+        costCenterName: row.costCenterName,
+        enabled: row.enabled
+      },
+      { emitEvent: false }
+    );
+
     this.userModal.open();
+
+    forkJoin({
+      systemUsers: this.getSystemUsersByTerm(row.userCode, row.name),
+      costCenters: this.getCostCentersByTerm(row.costCenterCode, row.costCenterName)
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ systemUsers, costCenters }) => {
+        const mergedSystemUsers = this.ensureCurrentSystemUser(systemUsers, row);
+        const mergedCostCenters = this.ensureCurrentCostCenter(costCenters, row);
+
+        this.systemUserResults = mergedSystemUsers;
+        this.systemUserOptions = mergedSystemUsers.map(user => ({
+          label: user.usuario,
+          value: user.usuario,
+          nome: user.nome,
+          email: user.email
+        }));
+
+        this.costCenterResults = mergedCostCenters;
+        this.costCenterOptions = mergedCostCenters.map(costCenter => ({
+          label: costCenter.ccusto,
+          value: costCenter.ccusto,
+          ccnome: costCenter.ccnome
+        }));
+
+        this.userForm.reset(
+          {
+            userCode: row.userCode,
+            name: row.name,
+            email: row.email,
+            costCenterCode: row.costCenterCode,
+            costCenterName: row.costCenterName,
+            enabled: row.enabled
+          },
+          { emitEvent: false }
+        );
+
+        this.isEditModalLoading = false;
+      });
   }
 
   public closeModal(): void {
+    this.isEditModalLoading = false;
     this.systemUserOptions = [];
     this.systemUserResults = [];
     this.costCenterOptions = [];
@@ -215,6 +262,10 @@ export class UserAccessComponent implements OnInit {
   }
 
   public onSystemUserChange(event: string | { value?: string }): void {
+    if (this.isEditModalLoading) {
+      return;
+    }
+
     const value = this.extractComboValue(event);
 
     if (value) {
@@ -258,6 +309,10 @@ export class UserAccessComponent implements OnInit {
   }
 
   public onSystemUserFocus(): void {
+    if (this.isEditModalLoading) {
+      return;
+    }
+
     // Ao abrir a seta do combo, tenta carregar lista para exibição imediata.
     if (this.systemUserOptions.length === 0) {
       this.loadSystemUsersByTerm('');
@@ -265,11 +320,19 @@ export class UserAccessComponent implements OnInit {
   }
 
   public onSystemUserInputChange(event: string | { value?: string }): void {
+    if (this.isEditModalLoading) {
+      return;
+    }
+
     const term = this.extractComboValue(event);
     this.loadSystemUsersByTerm(term);
   }
 
   public onCostCenterChange(event: string | { value?: string }): void {
+    if (this.isEditModalLoading) {
+      return;
+    }
+
     const value = this.extractComboValue(event);
 
     if (value) {
@@ -310,6 +373,10 @@ export class UserAccessComponent implements OnInit {
   }
 
   public onCostCenterFocus(): void {
+    if (this.isEditModalLoading) {
+      return;
+    }
+
     // Ao abrir a seta do combo, tenta carregar lista para exibição imediata.
     if (this.costCenterOptions.length === 0) {
       this.loadCostCentersByTerm('');
@@ -317,6 +384,10 @@ export class UserAccessComponent implements OnInit {
   }
 
   public onCostCenterInputChange(event: string | { value?: string }): void {
+    if (this.isEditModalLoading) {
+      return;
+    }
+
     const term = this.extractComboValue(event);
     this.loadCostCentersByTerm(term);
   }
@@ -563,27 +634,11 @@ export class UserAccessComponent implements OnInit {
 
   private loadSystemUsersByTerm(term: string): void {
     const normalizedTerm = term.trim();
-    this.searchSystemUsersWithFallback(normalizedTerm, normalizedTerm)
+    this.getSystemUsersByTerm(normalizedTerm, normalizedTerm)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(users => {
-        if (users.length > 0) {
-          this.systemUserResults = users;
-          this.systemUserOptions = users.map(user => ({
-            label: user.usuario,
-            value: user.usuario,
-            nome: user.nome,
-            email: user.email
-          }));
-          return;
-        }
-
-        // Fallback local para não deixar a lista vazia ao abrir a seta.
-        this.systemUserResults = this.users.map(user => ({
-          usuario: user.userCode,
-          nome: user.name,
-          email: user.email
-        }));
-        this.systemUserOptions = this.systemUserResults.map(user => ({
+        this.systemUserResults = users;
+        this.systemUserOptions = users.map(user => ({
           label: user.usuario,
           value: user.usuario,
           nome: user.nome,
@@ -594,20 +649,60 @@ export class UserAccessComponent implements OnInit {
 
   private loadCostCentersByTerm(term: string): void {
     const normalizedTerm = term.trim();
-    this.searchCostCentersWithFallback(normalizedTerm, normalizedTerm)
+    this.getCostCentersByTerm(normalizedTerm, normalizedTerm)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(costCenters => {
-        if (costCenters.length > 0) {
-          this.costCenterResults = costCenters;
-          this.costCenterOptions = costCenters.map(cc => ({
-            label: cc.ccusto,
-            value: cc.ccusto,
-            ccnome: cc.ccnome
-          }));
-          return;
+        this.costCenterResults = costCenters;
+        this.costCenterOptions = costCenters.map(cc => ({
+          label: cc.ccusto,
+          value: cc.ccusto,
+          ccnome: cc.ccnome
+        }));
+      });
+  }
+
+  private getSystemUsersByTerm(codeTerm: string, nameTerm: string) {
+    return this.searchSystemUsersWithFallback(codeTerm, nameTerm).pipe(
+      map(users => {
+        if (users.length > 0) {
+          return users;
         }
 
-        // Fallback local para não deixar a lista vazia ao abrir a seta.
+        if (codeTerm.trim() || nameTerm.trim()) {
+          return [
+            {
+              usuario: codeTerm.trim(),
+              nome: nameTerm.trim(),
+              email: this.userForm.controls.email.value.trim()
+            }
+          ].filter(user => user.usuario.length > 0);
+        }
+
+        return this.users.map(user => ({
+          usuario: user.userCode,
+          nome: user.name,
+          email: user.email
+        }));
+      })
+    );
+  }
+
+  private getCostCentersByTerm(codeTerm: string, nameTerm: string) {
+    return this.searchCostCentersWithFallback(codeTerm, nameTerm).pipe(
+      map(costCenters => {
+        if (costCenters.length > 0) {
+          return costCenters;
+        }
+
+        if (codeTerm.trim() || nameTerm.trim()) {
+          return [
+            {
+              ccusto: codeTerm.trim(),
+              ccnome: nameTerm.trim()
+            }
+          ].filter(costCenter => costCenter.ccusto.length > 0);
+        }
+
         const uniqueCostCenters = new Map<string, { ccusto: string; ccnome: string }>();
         this.users.forEach(user => {
           if (!uniqueCostCenters.has(user.costCenterCode)) {
@@ -618,13 +713,36 @@ export class UserAccessComponent implements OnInit {
           }
         });
 
-        this.costCenterResults = Array.from(uniqueCostCenters.values());
-        this.costCenterOptions = this.costCenterResults.map(cc => ({
-          label: cc.ccusto,
-          value: cc.ccusto,
-          ccnome: cc.ccnome
-        }));
-      });
+        return Array.from(uniqueCostCenters.values());
+      })
+    );
+  }
+
+  private ensureCurrentSystemUser(
+    users: Array<{ usuario: string; nome: string; email: string }>,
+    row: PowerBiUser
+  ): Array<{ usuario: string; nome: string; email: string }> {
+    const currentUser = {
+      usuario: row.userCode,
+      nome: row.name,
+      email: row.email
+    };
+
+    const filteredUsers = users.filter(user => this.normalize(user.usuario) !== this.normalize(row.userCode));
+    return [currentUser, ...filteredUsers];
+  }
+
+  private ensureCurrentCostCenter(
+    costCenters: Array<{ ccusto: string; ccnome: string }>,
+    row: PowerBiUser
+  ): Array<{ ccusto: string; ccnome: string }> {
+    const currentCostCenter = {
+      ccusto: row.costCenterCode,
+      ccnome: row.costCenterName
+    };
+
+    const filteredCostCenters = costCenters.filter(costCenter => this.normalize(costCenter.ccusto) !== this.normalize(row.costCenterCode));
+    return [currentCostCenter, ...filteredCostCenters];
   }
 
   private extractComboValue(event: string | { value?: string }): string {
