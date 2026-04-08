@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, map, merge, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, forkJoin, map, merge, of, switchMap } from 'rxjs';
 import {
   PoButtonModule,
   PoFieldModule,
