@@ -2,11 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, distinctUntilChanged, finalize, of, startWith } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, finalize, map, merge, of, switchMap } from 'rxjs';
 import {
   PoButtonModule,
   PoFieldModule,
-  PoSelectOption,
   PoModalAction,
   PoModalComponent,
   PoModalModule,
@@ -47,34 +46,29 @@ export class UserAccessComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   public users: PowerBiUser[] = [];
-  public filteredUsers: PowerBiUser[] = [];
-  public readonly columns: PoTableColumn[] = [
-    { property: 'filial', label: 'Filial' },
-    { property: 'userCode', label: 'Usuario' },
-    { property: 'name', label: 'Nome' },
-    { property: 'email', label: 'E-mail' },
-    { property: 'costCenterCode', label: 'C.Custo' },
-    { property: 'costCenterName', label: 'Nome C.Custo' },
-    {
-      property: 'enabled',
-      label: 'Status',
-      type: 'label',
-      labels: [
-        { value: true as any, color: 'color-11', label: 'Ativo' },
-        { value: false as any, color: 'color-08', label: 'Inativo' }
-      ]
-    }
-  ];
+  public columns: PoTableColumn[] = [];
   public isLoading = true;
   public editingRecno: number | null = null;
   public isSearchingSystemUsers = false;
-  public systemUsersSelectOptions: PoSelectOption[] = [];
-  public systemUsersLookup: Array<{ usuario: string; nome: string; email: string }> = [];
+  public systemUserSuggestions: Array<{ usuario: string; nome: string }> = [];
   public userSearchNotice = '';
   public isSearchingCostCenters = false;
-  public costCentersSelectOptions: PoSelectOption[] = [];
-  public costCentersLookup: Array<{ ccusto: string; ccnome: string }> = [];
+  public costCenterSuggestions: Array<{ ccusto: string; ccnome: string }> = [];
   public costCenterSearchNotice = '';
+  public selectedSystemUserCode = '';
+  public selectedCostCenterCode = '';
+
+  private readonly minAutocompleteSearchLength = 2;
+
+  private readonly columnLabelMap: Record<string, string> = {
+    id: 'Id',
+    userCode: 'Usuario',
+    name: 'Nome',
+    email: 'E-mail',
+    costCenterCode: 'C.Custo',
+    costCenterName: 'Nome C.Custo',
+    enabled: 'Status'
+  };
 
   public readonly tableActions: PoTableAction[] = [
     {
@@ -100,15 +94,49 @@ export class UserAccessComponent implements OnInit {
 
   public readonly rowTemplateArrowDirection = PoTableRowTemplateArrowDirection.Right;
 
+  public get filteredSystemUserSuggestions(): Array<{ usuario: string; nome: string }> {
+    const codeTerm = this.userForm.controls.userCode.value.trim().toLowerCase();
+    const nameTerm = this.userForm.controls.name.value.trim().toLowerCase();
+
+    const filtered = this.systemUserSuggestions.filter(suggestion => {
+      const matchesCode = !codeTerm || suggestion.usuario.toLowerCase().includes(codeTerm);
+      const matchesName = !nameTerm || suggestion.nome.toLowerCase().includes(nameTerm);
+      return matchesCode && matchesName;
+    });
+
+    return filtered.slice(0, 15);
+  }
+
   public ngOnInit(): void {
-    this.setupFilters();
     this.loadUsers();
-    this.setupSystemUserSelectionAutofill();
-    this.setupCostCenterSelectionAutofill();
+    this.setupSystemUserSearch();
+    this.setupCostCenterSearch();
+  }
+
+  public get pageSubtitle(): string {
+    return 'Gestão de usuarios habilitados para visualização do Power BI';
   }
 
   public get enabledCount(): number {
     return this.users.filter(user => user.enabled).length;
+  }
+
+  public get filteredUsers(): PowerBiUser[] {
+    const term = this.filtersForm.controls.term.value.trim().toLowerCase();
+    const onlyEnabled = this.filtersForm.controls.onlyEnabled.value;
+
+    return this.users.filter(user => {
+      const matchesTerm =
+        term.length === 0 ||
+        [user.userCode, user.name, user.email, user.costCenterCode, user.costCenterName]
+          .join(' ')
+          .toLowerCase()
+          .includes(term);
+
+      const matchesEnabled = !onlyEnabled || user.enabled;
+
+      return matchesTerm && matchesEnabled;
+    });
   }
 
   public get selectedUsersCount(): number {
@@ -154,12 +182,12 @@ export class UserAccessComponent implements OnInit {
 
   public openCreateModal(): void {
     this.editingRecno = null;
-    this.systemUsersSelectOptions = [];
-    this.systemUsersLookup = [];
-    this.costCentersSelectOptions = [];
-    this.costCentersLookup = [];
+    this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
     this.userSearchNotice = '';
     this.costCenterSearchNotice = '';
+    this.selectedSystemUserCode = '';
+    this.selectedCostCenterCode = '';
     this.userForm.reset({
       userCode: '',
       name: '',
@@ -168,20 +196,17 @@ export class UserAccessComponent implements OnInit {
       costCenterName: '',
       enabled: true
     });
-    this.applyCreateModeFieldLocks();
-    this.loadSystemUsersForSelect();
-    this.loadCostCentersForSelect();
     this.userModal.open();
   }
 
   public openEditModal(row: PowerBiUser): void {
     this.editingRecno = row.recno;
-    this.systemUsersSelectOptions = [];
-    this.systemUsersLookup = [];
-    this.costCentersSelectOptions = [];
-    this.costCentersLookup = [];
+    this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
     this.userSearchNotice = '';
     this.costCenterSearchNotice = '';
+    this.selectedSystemUserCode = row.userCode;
+    this.selectedCostCenterCode = row.costCenterCode;
     this.userForm.reset({
       userCode: row.userCode,
       name: row.name,
@@ -190,21 +215,36 @@ export class UserAccessComponent implements OnInit {
       costCenterName: row.costCenterName,
       enabled: row.enabled
     });
-    this.releaseEditModeFieldLocks();
-    this.loadSystemUsersForSelect();
-    this.loadCostCentersForSelect();
     this.userModal.open();
   }
 
   public closeModal(): void {
-    this.systemUsersSelectOptions = [];
-    this.systemUsersLookup = [];
-    this.costCentersSelectOptions = [];
-    this.costCentersLookup = [];
+    this.systemUserSuggestions = [];
+    this.costCenterSuggestions = [];
     this.userSearchNotice = '';
     this.costCenterSearchNotice = '';
+    this.selectedSystemUserCode = '';
+    this.selectedCostCenterCode = '';
     this.userModal.close();
     this.userForm.markAsPristine();
+  }
+
+  public selectSystemUserSuggestion(user: { usuario: string; nome: string }): void {
+    this.selectedSystemUserCode = user.usuario;
+    this.userForm.patchValue({
+      userCode: user.usuario,
+      name: user.nome
+    }, { emitEvent: false });
+    this.systemUserSuggestions = [];
+  }
+
+  public selectCostCenterSuggestion(costCenter: { ccusto: string; ccnome: string }): void {
+    this.selectedCostCenterCode = costCenter.ccusto;
+    this.userForm.patchValue({
+      costCenterCode: costCenter.ccusto,
+      costCenterName: costCenter.ccnome
+    }, { emitEvent: false });
+    this.costCenterSuggestions = [];
   }
 
   public submitForm(): void {
@@ -214,7 +254,21 @@ export class UserAccessComponent implements OnInit {
       return;
     }
 
-    const payload = this.userForm.getRawValue() as PowerBiUserUpsert;
+    if (!this.editingRecno && !this.hasValidCreateSelections()) {
+      this.notification.warning('Selecione Usuario e C.Custo a partir da lista antes de salvar.');
+      return;
+    }
+
+    const formData = this.userForm.getRawValue();
+    const payload: PowerBiUserUpsert = {
+      filial: '',
+      userCode: formData.userCode,
+      name: formData.name,
+      email: formData.email,
+      costCenterCode: formData.costCenterCode,
+      costCenterName: formData.costCenterName,
+      enabled: formData.enabled
+    };
 
     if (this.editingRecno) {
       this.service.update(this.editingRecno, payload).subscribe(() => {
@@ -261,7 +315,7 @@ export class UserAccessComponent implements OnInit {
     this.service.getAll().subscribe({
       next: users => {
         this.users = users;
-        this.syncFilteredUsers();
+        this.columns = this.buildColumnsFromUsers(users);
         this.isLoading = false;
       },
       error: () => {
@@ -271,130 +325,180 @@ export class UserAccessComponent implements OnInit {
     });
   }
 
-  private setupFilters(): void {
-    this.filtersForm.valueChanges
-      .pipe(
-        startWith(this.filtersForm.getRawValue()),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(() => {
-        this.syncFilteredUsers();
-      });
-  }
-
-  private setupSystemUserSelectionAutofill(): void {
+  private setupSystemUserSearch(): void {
     this.userForm.controls.userCode.valueChanges
-      .pipe(
-        distinctUntilChanged(),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(selectedUserCode => {
-        if (this.editingRecno || !selectedUserCode) {
-          return;
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(userCode => {
+        if ((userCode ?? '').trim() !== this.selectedSystemUserCode) {
+          this.selectedSystemUserCode = '';
         }
-
-        const selectedUser = this.systemUsersLookup.find(user => user.usuario === selectedUserCode);
-
-        if (!selectedUser) {
-          return;
-        }
-
-        this.userForm.patchValue({
-          name: selectedUser.nome,
-          email: selectedUser.email
-        }, { emitEvent: false });
       });
-  }
 
-  private loadSystemUsersForSelect(): void {
-    this.isSearchingSystemUsers = true;
-    this.userSearchNotice = '';
-
-    this.service.getSystemUsersList()
+    merge(
+      this.userForm.controls.userCode.valueChanges,
+      this.userForm.controls.name.valueChanges
+    )
       .pipe(
-        catchError(() => {
-          this.userSearchNotice = 'Nao foi possivel carregar a lista de usuarios.';
-          return of([] as Array<{ usuario: string; nome: string; email: string }>);
+        map(() => ({
+          codeTerm: this.userForm.controls.userCode.value.trim(),
+          nameTerm: this.userForm.controls.name.value.trim()
+        })),
+        debounceTime(300),
+        distinctUntilChanged((previous, current) => {
+          return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
         }),
-        finalize(() => {
-          this.isSearchingSystemUsers = false;
+        switchMap(({ codeTerm, nameTerm }) => {
+          if (this.editingRecno) {
+            this.systemUserSuggestions = [];
+            this.isSearchingSystemUsers = false;
+            return of([] as Array<{ usuario: string; nome: string }>);
+          }
+
+          return this.searchSystemUsersWithFallback(codeTerm, nameTerm);
         }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(users => {
-        this.systemUsersLookup = users;
-        this.systemUsersSelectOptions = users.map(user => ({
-          value: user.usuario,
-          label: `${user.usuario} - ${user.nome}`
-        }));
-
-        if (this.systemUsersSelectOptions.length === 0 && !this.userSearchNotice) {
-          this.userSearchNotice = 'Nenhum usuario disponivel para selecao.';
-        }
+        this.systemUserSuggestions = users;
       });
   }
 
-  private applyCreateModeFieldLocks(): void {
-    this.userForm.controls.name.disable({ emitEvent: false });
-    this.userForm.controls.email.disable({ emitEvent: false });
-    this.userForm.controls.costCenterName.disable({ emitEvent: false });
-  }
-
-  private releaseEditModeFieldLocks(): void {
-    this.userForm.controls.email.enable({ emitEvent: false });
-    this.userForm.controls.name.disable({ emitEvent: false });
-    this.userForm.controls.costCenterName.disable({ emitEvent: false });
-  }
-
-  private setupCostCenterSelectionAutofill(): void {
+  private setupCostCenterSearch(): void {
     this.userForm.controls.costCenterCode.valueChanges
-      .pipe(
-        distinctUntilChanged(),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(selectedCostCenterCode => {
-        if (this.editingRecno || !selectedCostCenterCode) {
-          return;
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(costCenterCode => {
+        if ((costCenterCode ?? '').trim() !== this.selectedCostCenterCode) {
+          this.selectedCostCenterCode = '';
         }
-
-        const selectedCostCenter = this.costCentersLookup.find(costCenter => costCenter.ccusto === selectedCostCenterCode);
-
-        if (!selectedCostCenter) {
-          return;
-        }
-
-        this.userForm.patchValue({
-          costCenterName: selectedCostCenter.ccnome
-        }, { emitEvent: false });
       });
-  }
 
-  private loadCostCentersForSelect(): void {
-    this.isSearchingCostCenters = true;
-    this.costCenterSearchNotice = '';
-
-    this.service.getCostCentersList()
+    merge(
+      this.userForm.controls.costCenterCode.valueChanges,
+      this.userForm.controls.costCenterName.valueChanges
+    )
       .pipe(
-        catchError(() => {
-          this.costCenterSearchNotice = 'Nao foi possivel carregar a lista de centros de custo.';
-          return of([] as Array<{ ccusto: string; ccnome: string }>);
+        map(() => ({
+          codeTerm: this.userForm.controls.costCenterCode.value.trim(),
+          nameTerm: this.userForm.controls.costCenterName.value.trim()
+        })),
+        debounceTime(300),
+        distinctUntilChanged((previous, current) => {
+          return previous.codeTerm === current.codeTerm && previous.nameTerm === current.nameTerm;
         }),
-        finalize(() => {
-          this.isSearchingCostCenters = false;
+        switchMap(({ codeTerm, nameTerm }) => {
+          if (this.editingRecno) {
+            this.costCenterSuggestions = [];
+            this.isSearchingCostCenters = false;
+            return of([] as Array<{ ccusto: string; ccnome: string }>);
+          }
+
+          return this.searchCostCentersWithFallback(codeTerm, nameTerm);
         }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(costCenters => {
-        this.costCentersLookup = costCenters;
-        this.costCentersSelectOptions = costCenters.map(costCenter => ({
-          value: costCenter.ccusto,
-          label: `${costCenter.ccusto} - ${costCenter.ccnome}`
-        }));
-
-        if (this.costCentersSelectOptions.length === 0 && !this.costCenterSearchNotice) {
-          this.costCenterSearchNotice = 'Nenhum centro de custo disponivel para selecao.';
-        }
+        this.costCenterSuggestions = costCenters;
       });
+  }
+
+  private searchSystemUsersWithFallback(
+    codeTerm: string,
+    nameTerm: string
+  ) {
+    const normalizedCode = codeTerm.trim();
+    const normalizedName = nameTerm.trim();
+
+    if (normalizedCode.length >= this.minAutocompleteSearchLength) {
+      this.isSearchingSystemUsers = true;
+      return this.service.searchSystemUsersByName(normalizedCode).pipe(
+        switchMap(results => {
+          if (results.length > 0) {
+            this.userSearchNotice = '';
+            return of(results);
+          }
+
+          if (normalizedName.length >= this.minAutocompleteSearchLength && normalizedName !== normalizedCode) {
+            this.userSearchNotice = 'Nao encontramos pelo codigo. Tentando pelo nome.';
+            return this.service.searchSystemUsersByName(normalizedName);
+          }
+
+          this.userSearchNotice = 'Nao encontramos pelo codigo. Tente pesquisar pelo nome.';
+          return of([] as Array<{ usuario: string; nome: string }>);
+        }),
+        catchError(() => {
+          this.userSearchNotice = '';
+          return of([] as Array<{ usuario: string; nome: string }>);
+        }),
+        finalize(() => {
+          this.isSearchingSystemUsers = false;
+        })
+      );
+    }
+
+    if (normalizedName.length >= this.minAutocompleteSearchLength) {
+      this.userSearchNotice = '';
+      this.isSearchingSystemUsers = true;
+      return this.service.searchSystemUsersByName(normalizedName).pipe(
+        catchError(() => of([] as Array<{ usuario: string; nome: string }>)),
+        finalize(() => {
+          this.isSearchingSystemUsers = false;
+        })
+      );
+    }
+
+    this.userSearchNotice = '';
+    this.isSearchingSystemUsers = false;
+    return of([] as Array<{ usuario: string; nome: string }>);
+  }
+
+  private searchCostCentersWithFallback(
+    codeTerm: string,
+    nameTerm: string
+  ) {
+    const normalizedCode = codeTerm.trim();
+    const normalizedName = nameTerm.trim();
+
+    if (normalizedCode.length >= this.minAutocompleteSearchLength) {
+      this.isSearchingCostCenters = true;
+      return this.service.searchCostCentersByTerm(normalizedCode).pipe(
+        switchMap(results => {
+          if (results.length > 0) {
+            this.costCenterSearchNotice = '';
+            return of(results);
+          }
+
+          if (normalizedName.length >= this.minAutocompleteSearchLength && normalizedName !== normalizedCode) {
+            this.costCenterSearchNotice = 'Nao encontramos pelo codigo. Tentando pelo nome.';
+            return this.service.searchCostCentersByTerm(normalizedName);
+          }
+
+          this.costCenterSearchNotice = 'Nao encontramos pelo codigo. Tente pesquisar pelo nome.';
+          return of([] as Array<{ ccusto: string; ccnome: string }>);
+        }),
+        catchError(() => {
+          this.costCenterSearchNotice = '';
+          return of([] as Array<{ ccusto: string; ccnome: string }>);
+        }),
+        finalize(() => {
+          this.isSearchingCostCenters = false;
+        })
+      );
+    }
+
+    if (normalizedName.length >= this.minAutocompleteSearchLength) {
+      this.costCenterSearchNotice = '';
+      this.isSearchingCostCenters = true;
+      return this.service.searchCostCentersByTerm(normalizedName).pipe(
+        catchError(() => of([] as Array<{ ccusto: string; ccnome: string }>)),
+        finalize(() => {
+          this.isSearchingCostCenters = false;
+        })
+      );
+    }
+
+    this.costCenterSearchNotice = '';
+    this.isSearchingCostCenters = false;
+    return of([] as Array<{ ccusto: string; ccnome: string }>);
   }
 
   private updateSelectedUsers(enabled: boolean, statusLabel: 'ativados' | 'inativados'): void {
@@ -413,6 +517,13 @@ export class UserAccessComponent implements OnInit {
         this.notification.error(`Nao foi possivel atualizar os usuarios.`);
       }
     });
+  }
+
+  private hasValidCreateSelections(): boolean {
+    const selectedUserCode = this.userForm.controls.userCode.value.trim();
+    const selectedCostCenterCode = this.userForm.controls.costCenterCode.value.trim();
+
+    return selectedUserCode === this.selectedSystemUserCode && selectedCostCenterCode === this.selectedCostCenterCode;
   }
 
   private handleEditAction(row: unknown): void {
@@ -445,21 +556,44 @@ export class UserAccessComponent implements OnInit {
     );
   }
 
-  private syncFilteredUsers(): void {
-    const term = this.filtersForm.controls.term.value.trim().toLowerCase();
-    const onlyEnabled = this.filtersForm.controls.onlyEnabled.value;
+  private buildColumnsFromUsers(users: PowerBiUser[]): PoTableColumn[] {
+    if (users.length === 0) {
+      return [];
+    }
 
-    this.filteredUsers = this.users.filter(user => {
-      const matchesTerm =
-        term.length === 0 ||
-        [user.filial, user.userCode, user.name, user.email, user.costCenterCode, user.costCenterName]
-          .join(' ')
-          .toLowerCase()
-          .includes(term);
+    const firstUser = users[0] as unknown as Record<string, unknown>;
+    return Object.keys(firstUser)
+      .filter(property => property !== 'id' && property !== 'recno')
+      .map((property): PoTableColumn => {
+      if (property === 'enabled') {
+        return {
+          property,
+          label: this.toColumnLabel(property),
+          type: 'label',
+          labels: [
+            { value: true as any, color: 'color-11', label: 'Ativo' },
+            { value: false as any, color: 'color-08', label: 'Inativo' }
+          ]
+        };
+      }
 
-      const matchesEnabled = !onlyEnabled || user.enabled;
+      return {
+        property,
+        label: this.toColumnLabel(property)
+      };
+      });
+  }
 
-      return matchesTerm && matchesEnabled;
-    });
+  private toColumnLabel(property: string): string {
+    if (this.columnLabelMap[property]) {
+      return this.columnLabelMap[property];
+    }
+
+    const normalized = property
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/_/g, ' ')
+      .trim();
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 }
