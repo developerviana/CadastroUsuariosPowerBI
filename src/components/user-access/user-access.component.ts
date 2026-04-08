@@ -760,8 +760,24 @@ export class UserAccessComponent implements OnInit {
   private hasValidSelections(): boolean {
     const selectedUserCode = this.userForm.controls.userCode.value.trim();
     const selectedCostCenterCode = this.userForm.controls.costCenterCode.value.trim();
-    return selectedUserCode === this.selectedSystemUserCode && 
-           selectedCostCenterCode === this.selectedCostCenterCode;
+
+    if (!selectedUserCode || !selectedCostCenterCode) {
+      return false;
+    }
+
+    const selectedUserMatchesState = this.normalize(selectedUserCode) === this.normalize(this.selectedSystemUserCode);
+    const selectedCostCenterMatchesState = this.normalize(selectedCostCenterCode) === this.normalize(this.selectedCostCenterCode);
+
+    const selectedUserExistsInList =
+      this.systemUserOptions.some(user => this.normalize(user.value) === this.normalize(selectedUserCode)) ||
+      this.systemUserResults.some(user => this.normalize(user.usuario) === this.normalize(selectedUserCode));
+
+    const selectedCostCenterExistsInList =
+      this.costCenterOptions.some(costCenter => this.normalize(costCenter.value) === this.normalize(selectedCostCenterCode)) ||
+      this.costCenterResults.some(costCenter => this.normalize(costCenter.ccusto) === this.normalize(selectedCostCenterCode));
+
+    return (selectedUserMatchesState || selectedUserExistsInList) &&
+      (selectedCostCenterMatchesState || selectedCostCenterExistsInList);
   }
 
   private isUserRow(row: unknown): row is PowerBiUser {
