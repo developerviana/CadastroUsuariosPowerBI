@@ -668,16 +668,6 @@ export class UserAccessComponent implements OnInit {
           return users;
         }
 
-        if (codeTerm.trim() || nameTerm.trim()) {
-          return [
-            {
-              usuario: codeTerm.trim(),
-              nome: nameTerm.trim(),
-              email: this.userForm.controls.email.value.trim()
-            }
-          ].filter(user => user.usuario.length > 0);
-        }
-
         return this.users.map(user => ({
           usuario: user.userCode,
           nome: user.name,
@@ -692,15 +682,6 @@ export class UserAccessComponent implements OnInit {
       map(costCenters => {
         if (costCenters.length > 0) {
           return costCenters;
-        }
-
-        if (codeTerm.trim() || nameTerm.trim()) {
-          return [
-            {
-              ccusto: codeTerm.trim(),
-              ccnome: nameTerm.trim()
-            }
-          ].filter(costCenter => costCenter.ccusto.length > 0);
         }
 
         const uniqueCostCenters = new Map<string, { ccusto: string; ccnome: string }>();

@@ -181,26 +181,37 @@
         <p *ngIf="isEditModalLoading">Carregando dados da edição...</p>
       </section>
 
-      <po-combo
-        class="po-md-3"
-        p-label="Usuario"
-        p-placeholder="Selecione um usuário"
-        p-filter-placeholder="Digite para filtrar..."
-        formControlName="userCode"
-        [p-options]="systemUserOptions"
-        [p-disabled]="isEditModalLoading"
-        (p-change)="onSystemUserChange($event)"
-        (p-input-change)="onSystemUserInputChange($event)"
-        (p-focus)="onSystemUserFocus()"
-        [p-required]="true"
-      >
-        <ng-template p-combo-option-template let-option>
-          <div>
-            <strong>{{ option?.value }}</strong>
-            <span> - {{ option?.nome }}</span>
-          </div>
-        </ng-template>
-      </po-combo>
+      <ng-container *ngIf="!isEditModalLoading; else loadingUserCombo">
+        <po-combo
+          class="po-md-3"
+          p-label="Usuario"
+          p-placeholder="Selecione um usuário"
+          p-filter-placeholder="Digite para filtrar..."
+          formControlName="userCode"
+          [p-options]="systemUserOptions"
+          (p-change)="onSystemUserChange($event)"
+          (p-input-change)="onSystemUserInputChange($event)"
+          (p-focus)="onSystemUserFocus()"
+          [p-required]="true"
+        >
+          <ng-template p-combo-option-template let-option>
+            <div>
+              <strong>{{ option?.value }}</strong>
+              <span> - {{ option?.nome }}</span>
+            </div>
+          </ng-template>
+        </po-combo>
+      </ng-container>
+
+      <ng-template #loadingUserCombo>
+        <po-input
+          class="po-md-3"
+          p-label="Usuario"
+          p-placeholder="Carregando..."
+          p-disabled="true"
+        >
+        </po-input>
+      </ng-template>
 
       <div class="po-md-7 name-field-wrapper">
         <po-input
@@ -224,26 +235,37 @@
         <small class="field-helper">E-mail obrigatório para liberar o acesso por e-mail.</small>
       </div>
 
-      <po-combo
-        class="po-md-3"
-        p-label="C.Custo"
-        p-placeholder="Selecione um centro de custo"
-        p-filter-placeholder="Digite para filtrar..."
-        formControlName="costCenterCode"
-        [p-options]="costCenterOptions"
-        [p-disabled]="isEditModalLoading"
-        (p-change)="onCostCenterChange($event)"
-        (p-input-change)="onCostCenterInputChange($event)"
-        (p-focus)="onCostCenterFocus()"
-        [p-required]="true"
-      >
-        <ng-template p-combo-option-template let-option>
-          <div>
-            <strong>{{ option?.value }}</strong>
-            <span> - {{ option?.ccnome }}</span>
-          </div>
-        </ng-template>
-      </po-combo>
+      <ng-container *ngIf="!isEditModalLoading; else loadingCostCenterCombo">
+        <po-combo
+          class="po-md-3"
+          p-label="C.Custo"
+          p-placeholder="Selecione um centro de custo"
+          p-filter-placeholder="Digite para filtrar..."
+          formControlName="costCenterCode"
+          [p-options]="costCenterOptions"
+          (p-change)="onCostCenterChange($event)"
+          (p-input-change)="onCostCenterInputChange($event)"
+          (p-focus)="onCostCenterFocus()"
+          [p-required]="true"
+        >
+          <ng-template p-combo-option-template let-option>
+            <div>
+              <strong>{{ option?.value }}</strong>
+              <span> - {{ option?.ccnome }}</span>
+            </div>
+          </ng-template>
+        </po-combo>
+      </ng-container>
+
+      <ng-template #loadingCostCenterCombo>
+        <po-input
+          class="po-md-3"
+          p-label="C.Custo"
+          p-placeholder="Carregando..."
+          p-disabled="true"
+        >
+        </po-input>
+      </ng-template>
 
       <po-input
         class="po-md-5 po-offset-md-4"
