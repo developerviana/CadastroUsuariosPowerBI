@@ -313,9 +313,7 @@ export class UserAccessComponent implements OnInit {
     }
 
     const term = this.extractComboValue(event);
-    if (term !== this.userForm.controls.userCode.value) {
-      this.userForm.controls.userCode.setValue(term);
-    }
+    this.loadSystemUsersByTerm(term);
   }
 
   public onCostCenterChange(event: string | { value?: string }): void {
@@ -379,9 +377,7 @@ export class UserAccessComponent implements OnInit {
     }
 
     const term = this.extractComboValue(event);
-    if (term !== this.userForm.controls.costCenterCode.value) {
-      this.userForm.controls.costCenterCode.setValue(term);
-    }
+    this.loadCostCentersByTerm(term);
   }
 
   public updateSelectionCount(): void {
