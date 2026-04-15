@@ -19,7 +19,21 @@ interface UserBiApiRow {
 
 interface UserBiApiResponse {
   success?: boolean;
+  total?: number;
+  enabledTotal?: number;
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
   rows?: UserBiApiRow[];
+}
+
+export interface UserBiPagedResult {
+  users: PowerBiUser[];
+  total: number;
+  enabledTotal: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 interface UserBiSearchRow {
@@ -50,6 +64,7 @@ export class PowerBiUserService {
   private readonly http = inject(HttpClient);
   private readonly proAppConfigService = inject(ProAppConfigService);
   private readonly usersPath = '/UserBI';
+  private readonly usersQueryPath = '/UserBI/query';
   private readonly systemUsersSearchPath = '/UserBI/search';
   private readonly costCentersSearchPath = '/UserBI/cost-center/search';
   private readonly storageKey = 'power-bi-users';
@@ -59,6 +74,34 @@ export class PowerBiUserService {
       map(response => {
         const rows = response?.rows ?? [];
         return rows.map((row, index) => this.mapApiRowToUser(row, index));
+      })
+    );
+  }
+
+  public query(params: { page: number; pageSize: number; term: string; onlyEnabled: boolean }): Observable<UserBiPagedResult> {
+    const safePage = Math.max(1, Math.floor(params.page));
+    const safePageSize = Math.max(1, Math.floor(params.pageSize));
+    const safeTerm = (params.term ?? '').trim();
+    const onlyEnabledText = params.onlyEnabled ? 'true' : 'false';
+    const encodedTerm = encodeURIComponent(safeTerm);
+
+    const endpoint = safeTerm.length > 0
+      ? `${this.resolveApiUrl(this.usersQueryPath)}/${safePage}/${safePageSize}/${onlyEnabledText}/${encodedTerm}`
+      : `${this.resolveApiUrl(this.usersQueryPath)}/${safePage}/${safePageSize}/${onlyEnabledText}`;
+
+    return this.http.get<UserBiApiResponse>(endpoint, this.getRequestOptions()).pipe(
+      map(response => {
+        const rows = response?.rows ?? [];
+        const users = rows.map((row, index) => this.mapApiRowToUser(row, index));
+
+        return {
+          users,
+          total: Number(response?.total ?? users.length),
+          enabledTotal: Number(response?.enabledTotal ?? users.filter(user => user.enabled).length),
+          page: Number(response?.page ?? safePage),
+          pageSize: Number(response?.pageSize ?? safePageSize),
+          totalPages: Math.max(1, Number(response?.totalPages ?? 1))
+        };
       })
     );
   }
