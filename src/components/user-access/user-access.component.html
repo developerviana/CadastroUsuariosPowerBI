@@ -97,6 +97,10 @@
         [p-hide-table-search]="true"
         [p-hide-columns-manager]="true"
         [p-sort]="true"
+        (p-selected)="updateSelectionCount()"
+        (p-unselected)="updateSelectionCount()"
+        (p-all-selected)="updateSelectionCount()"
+        (p-all-unselected)="updateSelectionCount()"
         p-container="shadow"
       >
         <ng-template

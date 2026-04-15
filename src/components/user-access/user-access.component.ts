@@ -61,6 +61,7 @@ export class UserAccessComponent implements OnInit {
   public costCenterResults: Array<{ ccusto: string; ccnome: string }> = [];
   public selectedSystemUserCode = '';
   public selectedCostCenterCode = '';
+  public selectedUsersCount = 0;
 
   private readonly minAutocompleteSearchLength = 1;
 
@@ -114,10 +115,6 @@ export class UserAccessComponent implements OnInit {
 
   public get filteredUsers(): PowerBiUser[] {
     return this.users;
-  }
-
-  public get selectedUsersCount(): number {
-    return this.getSelectedUsers().length;
   }
 
   public get hasSelectedUsers(): boolean {
@@ -316,7 +313,9 @@ export class UserAccessComponent implements OnInit {
     }
 
     const term = this.extractComboValue(event);
-    this.loadSystemUsersByTerm(term);
+    if (term !== this.userForm.controls.userCode.value) {
+      this.userForm.controls.userCode.setValue(term);
+    }
   }
 
   public onCostCenterChange(event: string | { value?: string }): void {
@@ -380,7 +379,13 @@ export class UserAccessComponent implements OnInit {
     }
 
     const term = this.extractComboValue(event);
-    this.loadCostCentersByTerm(term);
+    if (term !== this.userForm.controls.costCenterCode.value) {
+      this.userForm.controls.costCenterCode.setValue(term);
+    }
+  }
+
+  public updateSelectionCount(): void {
+    this.selectedUsersCount = this.getSelectedUsers().length;
   }
 
   public submitForm(): void {
@@ -508,6 +513,7 @@ export class UserAccessComponent implements OnInit {
         this.currentPage = result.page;
         this.totalPages = result.totalPages;
         this.columns = this.buildColumnsFromUsers(result.users);
+        this.selectedUsersCount = 0;
         this.isLoading = false;
       },
       error: () => {
@@ -516,6 +522,7 @@ export class UserAccessComponent implements OnInit {
         this.totalUsers = 0;
         this.totalEnabledUsers = 0;
         this.totalPages = 1;
+        this.selectedUsersCount = 0;
         this.isLoading = false;
       }
     });
