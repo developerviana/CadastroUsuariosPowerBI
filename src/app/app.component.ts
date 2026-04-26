@@ -80,7 +80,27 @@ export class AppComponent implements AfterViewInit {
   }
 
   public getUserThreadInfo(): void {
-    const threadInfo = this.proThreadInfoService.proThreadInfo;
+    if (!this.proAppConfigService.insideProtheus()) {
+      this.userContext = {
+        id: '-',
+        login: '-',
+        name: 'Ambiente local'
+      };
+      return;
+    }
+
+    let threadInfo: { userId?: string; userName?: string } | undefined;
+
+    try {
+      threadInfo = this.proThreadInfoService.proThreadInfo;
+    } catch {
+      this.userContext = {
+        id: '-',
+        login: '-',
+        name: '-'
+      };
+      return;
+    }
 
     this.userContext = {
       id: threadInfo?.userId || '-',
@@ -106,6 +126,13 @@ export class AppComponent implements AfterViewInit {
         };
 
         this.menuItems = nextItems;
+      },
+      error: () => {
+        this.userContext = {
+          id: threadInfo?.userId || '-',
+          login: threadInfo?.userName || '-',
+          name: threadInfo?.userName || '-'
+        };
       }
     });
   }

@@ -68,6 +68,26 @@
   overflow-y: auto;
 }
 
+.table-pagination {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.table-pagination-info {
+  color: #3d5a74;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.table-pagination-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .filters-panel {
   margin-bottom: 0.25rem;
 }
@@ -133,6 +153,16 @@
 @media (max-width: 1024px) {
   .table-viewport {
     max-height: calc(100vh - 280px);
+  }
+
+  .table-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-pagination-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .name-field-wrapper {

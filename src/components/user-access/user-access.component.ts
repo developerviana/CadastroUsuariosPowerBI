@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { catchError, debounceTime, distinctUntilChanged, forkJoin, map, merge, of, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, forkJoin, map, merge, of, startWith, switchMap } from 'rxjs';
 import {
   PoButtonModule,
   PoFieldModule,
@@ -19,7 +19,7 @@ import {
 } from '@po-ui/ng-components';
 
 import { PowerBiUser, PowerBiUserUpsert } from '../../app/models/power-bi-user.model';
-import { PowerBiUserService } from '../../app/services/power-bi-user.service';
+import { PowerBiUserService, UserBiPagedResult } from '../../app/services/power-bi-user.service';
 
 @Component({
   selector: 'app-user-access',
@@ -48,6 +48,11 @@ export class UserAccessComponent implements OnInit {
   public users: PowerBiUser[] = [];
   public columns: PoTableColumn[] = [];
   public isLoading = true;
+  public totalUsers = 0;
+  public totalEnabledUsers = 0;
+  public currentPage = 1;
+  public readonly pageSize = 25;
+  public totalPages = 1;
   public editingRecno: number | null = null;
   public isEditModalLoading = false;
   public systemUserOptions: Array<{ label: string; value: string; nome: string; email: string }> = [];
@@ -56,6 +61,7 @@ export class UserAccessComponent implements OnInit {
   public costCenterResults: Array<{ ccusto: string; ccnome: string }> = [];
   public selectedSystemUserCode = '';
   public selectedCostCenterCode = '';
+  public selectedUsersCount = 0;
 
   private readonly minAutocompleteSearchLength = 1;
 
@@ -94,39 +100,18 @@ export class UserAccessComponent implements OnInit {
   public readonly rowTemplateArrowDirection = PoTableRowTemplateArrowDirection.Right;
 
   public ngOnInit(): void {
-    this.loadUsers();
+    this.setupUsersQueryReload();
     this.setupSystemUserSearch();
     this.setupCostCenterSearch();
   }
 
-  public get pageSubtitle(): string {
-    return 'Gestão de usuarios habilitados para visualização do Power BI';
-  }
 
   public get enabledCount(): number {
-    return this.users.filter(user => user.enabled).length;
+    return this.totalEnabledUsers;
   }
 
   public get filteredUsers(): PowerBiUser[] {
-    const term = this.filtersForm.controls.term.value.trim().toLowerCase();
-    const onlyEnabled = this.filtersForm.controls.onlyEnabled.value;
-
-    return this.users.filter(user => {
-      const matchesTerm =
-        term.length === 0 ||
-        [user.userCode, user.name, user.email, user.costCenterCode, user.costCenterName]
-          .join(' ')
-          .toLowerCase()
-          .includes(term);
-
-      const matchesEnabled = !onlyEnabled || user.enabled;
-
-      return matchesTerm && matchesEnabled;
-    });
-  }
-
-  public get selectedUsersCount(): number {
-    return this.getSelectedUsers().length;
+    return this.users;
   }
 
   public get hasSelectedUsers(): boolean {
@@ -134,7 +119,7 @@ export class UserAccessComponent implements OnInit {
   }
 
   public get hasUsers(): boolean {
-    return this.users.length > 0;
+    return this.totalUsers > 0;
   }
 
   public get hasFilteredUsers(): boolean {
@@ -142,7 +127,7 @@ export class UserAccessComponent implements OnInit {
   }
 
   public get hasNoUsers(): boolean {
-    return this.users.length === 0;
+    return this.totalUsers === 0;
   }
 
   public get isFilteredEmpty(): boolean {
@@ -392,6 +377,10 @@ export class UserAccessComponent implements OnInit {
     this.loadCostCentersByTerm(term);
   }
 
+  public updateSelectionCount(): void {
+    this.selectedUsersCount = this.getSelectedUsers().length;
+  }
+
   public submitForm(): void {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
@@ -410,7 +399,7 @@ export class UserAccessComponent implements OnInit {
       this.service.update(this.editingRecno, payload).subscribe(() => {
         this.notification.success('Usuario atualizado com sucesso.');
         this.closeModal();
-        this.loadUsers();
+        this.refreshCurrentPage();
       });
       return;
     }
@@ -418,7 +407,7 @@ export class UserAccessComponent implements OnInit {
     this.service.create(payload).subscribe(() => {
       this.notification.success('Usuario cadastrado com sucesso.');
       this.closeModal();
-      this.loadUsers();
+      this.loadUsers(1);
     });
   }
 
@@ -435,10 +424,46 @@ export class UserAccessComponent implements OnInit {
       term: '',
       onlyEnabled: false
     });
+
+    this.currentPage = 1;
   }
 
   public refreshUsers(): void {
-    this.loadUsers();
+    this.refreshCurrentPage();
+  }
+
+  public goToPreviousPage(): void {
+    if (this.currentPage <= 1 || this.isLoading) {
+      return;
+    }
+
+    this.loadUsers(this.currentPage - 1);
+  }
+
+  public goToNextPage(): void {
+    if (this.currentPage >= this.totalPages || this.isLoading) {
+      return;
+    }
+
+    this.loadUsers(this.currentPage + 1);
+  }
+
+  public get canGoToPreviousPage(): boolean {
+    return this.currentPage > 1 && !this.isLoading;
+  }
+
+  public get canGoToNextPage(): boolean {
+    return this.currentPage < this.totalPages && !this.isLoading;
+  }
+
+  public get pageSummary(): string {
+    const startRecord = this.totalUsers === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+    const endRecord = Math.min(this.currentPage * this.pageSize, this.totalUsers);
+    return `${startRecord}-${endRecord} de ${this.totalUsers}`;
+  }
+
+  public get pageLabel(): string {
+    return `Pagina ${this.currentPage} de ${this.totalPages}`;
   }
 
   public showCreateFromEmptyState(): void {
@@ -446,16 +471,51 @@ export class UserAccessComponent implements OnInit {
     this.openCreateModal();
   }
 
-  private loadUsers(): void {
+  private setupUsersQueryReload(): void {
+    this.filtersForm.valueChanges
+      .pipe(
+        startWith(this.filtersForm.getRawValue()),
+        debounceTime(250),
+        distinctUntilChanged((previous, current) => {
+          return (previous.term ?? '') === (current.term ?? '') && previous.onlyEnabled === current.onlyEnabled;
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.currentPage = 1;
+        this.loadUsers(1);
+      });
+  }
+
+  private refreshCurrentPage(): void {
+    this.loadUsers(this.currentPage);
+  }
+
+  private loadUsers(page: number): void {
     this.isLoading = true;
-    this.service.getAll().subscribe({
-      next: users => {
-        this.users = users;
-        this.columns = this.buildColumnsFromUsers(users);
+    this.service.query({
+      page,
+      pageSize: this.pageSize,
+      term: this.filtersForm.controls.term.value,
+      onlyEnabled: this.filtersForm.controls.onlyEnabled.value
+    }).subscribe({
+      next: (result: UserBiPagedResult) => {
+        this.users = result.users;
+        this.totalUsers = result.total;
+        this.totalEnabledUsers = result.enabledTotal;
+        this.currentPage = result.page;
+        this.totalPages = result.totalPages;
+        this.columns = this.buildColumnsFromUsers(result.users);
+        this.selectedUsersCount = 0;
         this.isLoading = false;
       },
       error: () => {
         this.notification.error('Nao foi possivel carregar os usuarios.');
+        this.users = [];
+        this.totalUsers = 0;
+        this.totalEnabledUsers = 0;
+        this.totalPages = 1;
+        this.selectedUsersCount = 0;
         this.isLoading = false;
       }
     });
@@ -612,7 +672,7 @@ export class UserAccessComponent implements OnInit {
     this.service.updateUsersStatus(selectedUsers.map(user => user.recno), enabled).subscribe({
       next: () => {
         this.notification.success(`Usuarios ${statusLabel} com sucesso.`);
-        this.loadUsers();
+        this.refreshCurrentPage();
       },
       error: () => {
         this.notification.error(`Nao foi possivel atualizar os usuarios.`);

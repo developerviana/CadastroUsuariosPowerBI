@@ -1,8 +1,8 @@
-<po-page-default p-title="Cadastro de Usuarios Power BI" [p-subtitle]="pageSubtitle">
+<po-page-default >
   <section class="dashboard-resume po-mb-3">
     <div class="resume-item">
       <span class="resume-label">Total de usuarios</span>
-      <strong class="resume-value">{{ users.length }}</strong>
+      <strong class="resume-value">{{ totalUsers }}</strong>
     </div>
 
     <div class="resume-item">
@@ -97,6 +97,10 @@
         [p-hide-table-search]="true"
         [p-hide-columns-manager]="true"
         [p-sort]="true"
+        (p-selected)="updateSelectionCount()"
+        (p-unselected)="updateSelectionCount()"
+        (p-all-selected)="updateSelectionCount()"
+        (p-all-unselected)="updateSelectionCount()"
         p-container="shadow"
       >
         <ng-template
@@ -132,6 +136,33 @@
           </div>
         </ng-template>
       </po-table>
+
+      <section class="table-pagination po-mt-2">
+        <div class="table-pagination-info">
+          <strong>{{ pageLabel }}</strong>
+          <span>{{ pageSummary }}</span>
+        </div>
+
+        <div class="table-pagination-actions">
+          <po-button
+            p-label="Anterior"
+            p-kind="tertiary"
+            p-icon="po-icon-arrow-left"
+            [p-disabled]="!canGoToPreviousPage"
+            (p-click)="goToPreviousPage()"
+          >
+          </po-button>
+
+          <po-button
+            p-label="Proxima"
+            p-kind="tertiary"
+            p-icon="po-icon-arrow-right"
+            [p-disabled]="!canGoToNextPage"
+            (p-click)="goToNextPage()"
+          >
+          </po-button>
+        </div>
+      </section>
     </ng-container>
   </section>
 
